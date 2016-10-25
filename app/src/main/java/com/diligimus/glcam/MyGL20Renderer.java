@@ -16,7 +16,6 @@ import javax.microedition.khronos.opengles.GL10;
 public class MyGL20Renderer implements GvrView.StereoRenderer {// {
 
     DirectVideo mDirectVideo;
-    int texture;
     private SurfaceTexture surface;
     CameraActivity delegate;
 
@@ -33,24 +32,6 @@ public class MyGL20Renderer implements GvrView.StereoRenderer {// {
         GLES20.glCompileShader(shader);
 
         return shader;
-    }
-
-    static private int createTexture()
-    {
-        int[] texture = new int[1];
-
-        GLES20.glGenTextures(1,texture, 0);
-        GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, texture[0]);
-        GLES20.glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
-                GL10.GL_TEXTURE_MIN_FILTER,GL10.GL_LINEAR);
-        GLES20.glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
-                GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
-        GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
-                GL10.GL_TEXTURE_WRAP_S, GL10.GL_CLAMP_TO_EDGE);
-        GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
-                GL10.GL_TEXTURE_WRAP_T, GL10.GL_CLAMP_TO_EDGE);
-
-        return texture[0];
     }
 
     public void setSurface(SurfaceTexture _surface)
@@ -85,8 +66,8 @@ public class MyGL20Renderer implements GvrView.StereoRenderer {// {
 
     @Override
     public void onSurfaceCreated(javax.microedition.khronos.egl.EGLConfig eglConfig) {
-        texture = createTexture();
-        mDirectVideo = new DirectVideo(texture);
+        mDirectVideo = new DirectVideo();
+        int texture = mDirectVideo.getTexture();
 
         surface = new SurfaceTexture(texture);
         delegate.startCamera(texture);
