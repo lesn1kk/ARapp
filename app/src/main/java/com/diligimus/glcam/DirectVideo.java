@@ -53,6 +53,7 @@ public class DirectVideo {
             0.0f,  1.0f,
             1.0f,  1.0f
     };
+
     private short drawOrder[] = { 0, 1, 2, 0, 2, 3 }; // order to draw vertices
     //private short drawOrder[] = { 2, 3, 0, 2, 1, 0 }; // order to draw vertices
 
@@ -89,8 +90,6 @@ public class DirectVideo {
         GLES20.glAttachShader(mProgram, vertexShader);   // add the vertex shader to program
         GLES20.glAttachShader(mProgram, fragmentShader); // add the fragment shader to program
         GLES20.glLinkProgram(mProgram);
-
-        GLES20.glVertexAttribPointer(mTextureCoordHandle, COORDS_PER_VERTEX, GLES20.GL_FLOAT, false,vertexStride, textureVerticesBuffer);
     }
 
     public void draw()
@@ -106,6 +105,7 @@ public class DirectVideo {
 
         mTextureCoordHandle = GLES20.glGetAttribLocation(mProgram, "inputTextureCoordinate");
         GLES20.glEnableVertexAttribArray(mTextureCoordHandle);
+        GLES20.glVertexAttribPointer(mTextureCoordHandle, COORDS_PER_VERTEX, GLES20.GL_FLOAT, false, vertexStride, textureVerticesBuffer);
 
         mColorHandle = GLES20.glGetAttribLocation(mProgram, "s_texture");
 

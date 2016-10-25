@@ -60,8 +60,7 @@ public class MyGL20Renderer implements GvrView.StereoRenderer {// {
 
     @Override
     public void onNewFrame(HeadTransform headTransform) {
-        mDirectVideo = new DirectVideo(texture);
-        GLES20.glClearColor(1.0f, 0.0f, 0.0f, 0.0f);
+
     }
 
     @Override
@@ -87,9 +86,10 @@ public class MyGL20Renderer implements GvrView.StereoRenderer {// {
     @Override
     public void onSurfaceCreated(javax.microedition.khronos.egl.EGLConfig eglConfig) {
         texture = createTexture();
+        mDirectVideo = new DirectVideo(texture);
+
         surface = new SurfaceTexture(texture);
         delegate.startCamera(texture);
-
     }
 
     @Override
