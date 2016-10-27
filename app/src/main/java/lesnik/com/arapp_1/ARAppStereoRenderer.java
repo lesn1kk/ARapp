@@ -32,11 +32,11 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
 
     private float[] view;
     private float[] camera;
-    private float[] modelViewProjection;
-    private float[] modelView;
+    private float[] triangleViewProjection;
+    private float[] triangleView;
 
-    protected float[] modelCube;
-    protected float[] modelPosition;
+    protected float[] triangleModel;
+    protected float[] trianglePosition;
 
     private Vibrator vibrator;
 
@@ -113,13 +113,13 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
         {
             mARAppContext = _cameraContext;
 
-            modelCube = new float[16];
+            triangleModel = new float[16];
 
             camera = new float[16];
             view = new float[16];
-            modelViewProjection = new float[16];
-            modelView = new float[16];
-            modelPosition = new float[] {0.0f, 0.0f, -1.0f};
+            triangleViewProjection = new float[16];
+            triangleView = new float[16];
+            trianglePosition = new float[] {0.0f, 0.0f, -MAX_MODEL_DISTANCE / 2.0f};
 
             vibrator = (Vibrator) mARAppContext.getSystemService(Context.VIBRATOR_SERVICE);
         }
@@ -146,11 +146,11 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
         surface.getTransformMatrix(mtx);
 
         float[] perspective = eye.getPerspective(Z_NEAR, Z_FAR);
-        Matrix.multiplyMM(modelView, 0, view, 0, modelCube, 0);
-        Matrix.multiplyMM(modelViewProjection, 0, perspective, 0, modelView, 0);
+        Matrix.multiplyMM(triangleView, 0, view, 0, triangleModel, 0);
+        Matrix.multiplyMM(triangleViewProjection, 0, perspective, 0, triangleView, 0);
 
         mARAppCamera.draw();
-        mTriangle.draw(modelViewProjection);
+        mTriangle.draw(triangleViewProjection);
     }
 
     @Override
@@ -165,8 +165,8 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
 
     @Override
     public void onSurfaceCreated(javax.microedition.khronos.egl.EGLConfig eglConfig) {
-        Matrix.setIdentityM(modelCube, 0);
-        Matrix.translateM(modelCube, 0, modelPosition[0], modelPosition[1], modelPosition[2]);
+        Matrix.setIdentityM(triangleModel, 0);
+        Matrix.translateM(triangleModel, 0, trianglePosition[0], trianglePosition[1], trianglePosition[2]);
 
         mARAppCamera = new ARAppCamera(mARAppContext);
         int texture = mARAppCamera.getTexture();
