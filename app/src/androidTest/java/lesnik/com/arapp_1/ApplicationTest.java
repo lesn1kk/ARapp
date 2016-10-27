@@ -1,4 +1,4 @@
-package com.diligimus.glcam;
+package lesnik.com.arapp_1;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;

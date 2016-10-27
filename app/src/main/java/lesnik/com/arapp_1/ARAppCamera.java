@@ -1,4 +1,4 @@
-package com.diligimus.glcam;
+package lesnik.com.arapp_1;
 
 import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
@@ -6,54 +6,37 @@ import android.opengl.GLES20;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
-import java.nio.ShortBuffer;
 
 import javax.microedition.khronos.opengles.GL10;
 
-public class DirectVideo {
+public class ARAppCamera {
 
-    private final String vertexShaderCode =
-            "attribute vec4 position;" +
-                    "attribute vec2 inputTextureCoordinate;" +
-                    "varying vec2 textureCoordinate;" +
-                    "void main()" +
-                    "{"+
-                    "gl_Position = position;"+
-                    "textureCoordinate = inputTextureCoordinate;" +
-                    "}";
-
-    private final String fragmentShaderCode =
-            "#extension GL_OES_EGL_image_external : require\n"+
-                    "precision mediump float;" +
-                    "varying vec2 textureCoordinate;                            \n" +
-                    "uniform samplerExternalOES s_texture;               \n" +
-                    "void main() {" +
-                    "  gl_FragColor = texture2D( s_texture, textureCoordinate );\n" +
-                    "}";
-
-    private FloatBuffer vertexBuffer, textureVerticesBuffer;
+    private FloatBuffer screenVertBuffer, textVertBuffer;
     private final int mProgram;
     private int mPositionHandle, mTextureCoordHandle;
-
+    private ARAppActivity cameraContext;
+    private String TAG = "ARAppCamera";
 
     // number of coordinates per vertex in this array
     static final int COORDS_PER_VERTEX = 2;
 
-    private float[] screenVert = { -1.0F, 1.0F,
-                                    1.0F, 1.0F,
-                                    1.0F, -1.0F,
+    private float[] screenVert = {
+            -1.0F, 1.0F,
+            1.0F, 1.0F,
+            1.0F, -1.0F,
 
-                                    1.0F, -1.0F,
-                                    -1.0F, -1.0F,
-                                    -1.0F, 1.0F,};
+            1.0F, -1.0F,
+            -1.0F, -1.0F,
+            -1.0F, 1.0F,};
 
-    private float[] textVert = { 0.0F, 0.0F,
-                                1.0F, 0.0F,
-                                1.0F, 1.0F,
+    private float[] textVert = {
+            0.0F, 0.0F,
+            1.0F, 0.0F,
+            1.0F, 1.0F,
 
-                                1.0F, 1.0F,
-                                0.0F, 1.0F,
-                                0.0F, 0.0F };
+            1.0F, 1.0F,
+            0.0F, 1.0F,
+            0.0F, 0.0F };
 
     private final int vertexStride = COORDS_PER_VERTEX * 4; // 4 bytes per vertex
 
@@ -81,24 +64,25 @@ public class DirectVideo {
         return texture[0];
     }
 
-    public DirectVideo()
+    public ARAppCamera(ARAppActivity _cameraContext)
     {
+        cameraContext = _cameraContext;
         texture = createTexture();
 
         ByteBuffer bb = ByteBuffer.allocateDirect(screenVert.length * 4);
         bb.order(ByteOrder.nativeOrder());
-        vertexBuffer = bb.asFloatBuffer();
-        vertexBuffer.put(screenVert);
-        vertexBuffer.position(0);
+        screenVertBuffer = bb.asFloatBuffer();
+        screenVertBuffer.put(screenVert);
+        screenVertBuffer.position(0);
 
         ByteBuffer bb2 = ByteBuffer.allocateDirect(textVert.length * 4);
         bb2.order(ByteOrder.nativeOrder());
-        textureVerticesBuffer = bb2.asFloatBuffer();
-        textureVerticesBuffer.put(textVert);
-        textureVerticesBuffer.position(0);
+        textVertBuffer = bb2.asFloatBuffer();
+        textVertBuffer.put(textVert);
+        textVertBuffer.position(0);
 
-        int vertexShader = MyGL20Renderer.loadShader(GLES20.GL_VERTEX_SHADER, vertexShaderCode);
-        int fragmentShader = MyGL20Renderer.loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderCode);
+        int vertexShader = ARAppStereoRenderer.loadShader(GLES20.GL_VERTEX_SHADER, R.raw.vertex);
+        int fragmentShader = ARAppStereoRenderer.loadShader(GLES20.GL_FRAGMENT_SHADER, R.raw.fragment);
 
         mProgram = GLES20.glCreateProgram();             // create empty OpenGL ES Program
         GLES20.glAttachShader(mProgram, vertexShader);   // add the vertex shader to program
@@ -115,11 +99,11 @@ public class DirectVideo {
 
         mPositionHandle = GLES20.glGetAttribLocation(mProgram, "position");
         GLES20.glEnableVertexAttribArray(mPositionHandle);
-        GLES20.glVertexAttribPointer(mPositionHandle, COORDS_PER_VERTEX, GLES20.GL_FLOAT, true, vertexStride, vertexBuffer);
+        GLES20.glVertexAttribPointer(mPositionHandle, COORDS_PER_VERTEX, GLES20.GL_FLOAT, true, vertexStride, screenVertBuffer);
 
         mTextureCoordHandle = GLES20.glGetAttribLocation(mProgram, "inputTextureCoordinate");
         GLES20.glEnableVertexAttribArray(mTextureCoordHandle);
-        GLES20.glVertexAttribPointer(mTextureCoordHandle, COORDS_PER_VERTEX, GLES20.GL_FLOAT, false, vertexStride, textureVerticesBuffer);
+        GLES20.glVertexAttribPointer(mTextureCoordHandle, COORDS_PER_VERTEX, GLES20.GL_FLOAT, false, vertexStride, textVertBuffer);
 
         GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 6);
 
@@ -127,4 +111,6 @@ public class DirectVideo {
         GLES20.glDisableVertexAttribArray(mPositionHandle);
         GLES20.glDisableVertexAttribArray(mTextureCoordHandle);
     }
+
 }
+

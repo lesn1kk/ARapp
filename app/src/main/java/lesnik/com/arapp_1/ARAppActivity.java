@@ -1,31 +1,29 @@
-package com.diligimus.glcam;
+package lesnik.com.arapp_1;
 
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 
 import com.google.vr.sdk.base.GvrActivity;
 
 import java.io.IOException;
 
-
-public class CameraActivity extends GvrActivity {
+public class ARAppActivity extends GvrActivity {
 
     private Camera mCamera;
-    private MyGLSurfaceView glSurfaceView;
+    private ARAppGvrView glSurfaceView;
     private SurfaceTexture surface;
-    MyGL20Renderer renderer;
+    ARAppStereoRenderer renderer;
+
+    private float[] headView;
 
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
 
-        glSurfaceView = new MyGLSurfaceView(this);
+        glSurfaceView = new ARAppGvrView(this);
         renderer = glSurfaceView.getRenderer();
         setContentView(glSurfaceView);
     }
@@ -51,11 +49,11 @@ public class CameraActivity extends GvrActivity {
         }
         catch (IOException ioe)
         {
-            Log.w("MainActivity","CAM LAUNCH FAILED");
+            Log.w("ARAppActivity","CAM LAUNCH FAILED");
             System.out.println("Camera error");
         }
     }
-    
+
     @Override
     public void onPause()
     {
@@ -64,3 +62,4 @@ public class CameraActivity extends GvrActivity {
         System.exit(0);
     }
 }
+
