@@ -3,6 +3,7 @@ package lesnik.com.arapp_1;
 import android.content.Context;
 import android.graphics.SurfaceTexture;
 import android.opengl.GLES20;
+import android.opengl.Matrix;
 import android.os.Vibrator;
 import android.util.Log;
 
@@ -23,11 +24,19 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
     static ARAppActivity mARAppContext;
     private Triangle mTriangle;
 
+    private static final float Z_NEAR = 0.1f;
+    private static final float Z_FAR = 100.0f;
     private static final float CAMERA_Z = 0.01f;
+    private static final float MIN_MODEL_DISTANCE = 3.0f;
+    private static final float MAX_MODEL_DISTANCE = 5.0f;
 
     private float[] view;
     private float[] camera;
-    private float[] headView;
+    private float[] modelViewProjection;
+    private float[] modelView;
+
+    protected float[] modelCube;
+    protected float[] modelPosition;
 
     private Vibrator vibrator;
 
@@ -103,9 +112,14 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
         public ARAppStereoRenderer(ARAppActivity _cameraContext)
         {
             mARAppContext = _cameraContext;
-            headView = new float[16];
+
+            modelCube = new float[16];
+
             camera = new float[16];
             view = new float[16];
+            modelViewProjection = new float[16];
+            modelView = new float[16];
+            modelPosition = new float[] {0.0f, 0.0f, -1.0f};
 
             vibrator = (Vibrator) mARAppContext.getSystemService(Context.VIBRATOR_SERVICE);
         }
@@ -117,23 +131,26 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
 
     @Override
     public void onNewFrame(HeadTransform headTransform) {
-        //headTransform.getHeadView(headView, 0);
-
-        //Matrix.setLookAtM(camera, 0, 0.0f, 0.0f, CAMERA_Z, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
-
+        // Build the camera matrix and apply it to the ModelView.
+        Matrix.setLookAtM(camera, 0, 0.0f, 0.0f, CAMERA_Z, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
     }
 
     @Override
     public void onDrawEye(Eye eye) {
-        //Matrix.multiplyMM(view, 0, eye.getEyeView(), 0, camera, 0);
+        // Apply the eye transformation to the camera.
+        Matrix.multiplyMM(view, 0, eye.getEyeView(), 0, camera, 0);
 
         float[] mtx = new float[16];
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
         surface.updateTexImage();
         surface.getTransformMatrix(mtx);
 
+        float[] perspective = eye.getPerspective(Z_NEAR, Z_FAR);
+        Matrix.multiplyMM(modelView, 0, view, 0, modelCube, 0);
+        Matrix.multiplyMM(modelViewProjection, 0, perspective, 0, modelView, 0);
+
         mARAppCamera.draw();
-        mTriangle.draw();
+        mTriangle.draw(modelViewProjection);
     }
 
     @Override
@@ -148,6 +165,9 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
 
     @Override
     public void onSurfaceCreated(javax.microedition.khronos.egl.EGLConfig eglConfig) {
+        Matrix.setIdentityM(modelCube, 0);
+        Matrix.translateM(modelCube, 0, modelPosition[0], modelPosition[1], modelPosition[2]);
+
         mARAppCamera = new ARAppCamera(mARAppContext);
         int texture = mARAppCamera.getTexture();
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -156,6 +176,8 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
         mARAppContext.startCamera(texture);
 
         mTriangle = new Triangle();
+
+
     }
 
     @Override
