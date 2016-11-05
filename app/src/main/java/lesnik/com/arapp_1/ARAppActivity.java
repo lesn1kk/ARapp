@@ -84,9 +84,9 @@ public class ARAppActivity extends GvrActivity implements ResultHandler, Camera.
 //            params.setWhiteBalance(Camera.Parameters.WHITE_BALANCE_CLOUDY_DAYLIGHT);
 //            params.setPreviewFpsRange(1000,30000);
 //            params.getPictureSize();
-//
-//            params.setPictureSize(1920,1080);
-//            params.setPreviewSize(1280, 720);
+
+            //params.setPictureSize(1920,1080);
+            //params.setPreviewSize(1280, 720);
 
             mCamera.setParameters(params);
             mCamera.startPreview();
@@ -121,6 +121,7 @@ public class ARAppActivity extends GvrActivity implements ResultHandler, Camera.
         // Set this class as a result handler
         mResultHandler = this;
         vibrator.vibrate(50);
+        ARAppStereoRenderer.drawLine = true;
     }
 
     @Override

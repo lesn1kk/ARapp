@@ -21,6 +21,7 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
     private SurfaceTexture surface;
     static ARAppActivity mARAppContext;
     private Triangle mTriangle;
+    private QRScannerLine mLine;
 
     private static final float Z_NEAR = 0.1f;
     private static final float Z_FAR = 100.0f;
@@ -37,6 +38,7 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
     protected float[] trianglePosition;
     private static String TAG = "MyGL20Renderer";
 
+    public static boolean drawLine = false;
     /**
      * Converts a raw text file into a string.
      *
@@ -80,7 +82,7 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
     }
 
     /**
-     * Converts a raw text file, saved as a resource, into an OpenGL ES shader.
+     * Converts a raw text into an OpenGL ES shader.
      *
      * @param type  The type of shader we will be creating.
      * @param resId The resource ID of the raw text file about to be turned into a shader.
@@ -120,7 +122,6 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
         triangleViewProjection = new float[16];
         triangleView = new float[16];
         trianglePosition = new float[]{0.0f, 0.0f, -MAX_MODEL_DISTANCE / 2.0f};
-
     }
 
     public void setSurface(SurfaceTexture _surface) {
@@ -149,6 +150,10 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
 
         mARAppCamera.draw();
         mTriangle.draw(triangleViewProjection);
+
+        if(drawLine) {
+            mLine.draw();
+        }
     }
 
     @Override
@@ -174,6 +179,7 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
         mARAppContext.startCamera(texture);
 
         mTriangle = new Triangle();
+        mLine = new QRScannerLine();
     }
 
     @Override
