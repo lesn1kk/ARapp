@@ -1,10 +1,8 @@
 package lesnik.com.arapp_1;
 
-import android.content.Context;
 import android.graphics.SurfaceTexture;
 import android.opengl.GLES20;
 import android.opengl.Matrix;
-import android.os.Vibrator;
 import android.util.Log;
 
 import com.google.vr.sdk.base.Eye;
@@ -37,9 +35,6 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
 
     protected float[] triangleModel;
     protected float[] trianglePosition;
-
-    private Vibrator vibrator;
-
     private static String TAG = "MyGL20Renderer";
 
     /**
@@ -65,8 +60,14 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
         return null;
     }
 
-    public static int loadShader(int type, String shaderCode){
-
+    /**
+     * Converts a raw text file, saved as a resource, into an OpenGL ES shader.
+     *
+     * @param type  The type of shader we will be creating.
+     * @param shaderCode Raw text file about to be turned into a shader.
+     * @return The shader object handler.
+     */
+    public static int loadShader(int type, String shaderCode) {
         // create a vertex shader type (GLES20.GL_VERTEX_SHADER)
         // or a fragment shader type (GLES20.GL_FRAGMENT_SHADER)
         int shader = GLES20.glCreateShader(type);
@@ -81,7 +82,7 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
     /**
      * Converts a raw text file, saved as a resource, into an OpenGL ES shader.
      *
-     * @param type The type of shader we will be creating.
+     * @param type  The type of shader we will be creating.
      * @param resId The resource ID of the raw text file about to be turned into a shader.
      * @return The shader object handler.
      */
@@ -109,23 +110,20 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
         return shader;
     }
 
-        public ARAppStereoRenderer(ARAppActivity _cameraContext)
-        {
-            mARAppContext = _cameraContext;
+    public ARAppStereoRenderer(ARAppActivity _cameraContext) {
+        mARAppContext = _cameraContext;
 
-            triangleModel = new float[16];
+        triangleModel = new float[16];
 
-            camera = new float[16];
-            view = new float[16];
-            triangleViewProjection = new float[16];
-            triangleView = new float[16];
-            trianglePosition = new float[] {0.0f, 0.0f, -MAX_MODEL_DISTANCE / 2.0f};
+        camera = new float[16];
+        view = new float[16];
+        triangleViewProjection = new float[16];
+        triangleView = new float[16];
+        trianglePosition = new float[]{0.0f, 0.0f, -MAX_MODEL_DISTANCE / 2.0f};
 
-            vibrator = (Vibrator) mARAppContext.getSystemService(Context.VIBRATOR_SERVICE);
-        }
+    }
 
-    public void setSurface(SurfaceTexture _surface)
-    {
+    public void setSurface(SurfaceTexture _surface) {
         surface = _surface;
     }
 
@@ -168,7 +166,7 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
         Matrix.setIdentityM(triangleModel, 0);
         Matrix.translateM(triangleModel, 0, trianglePosition[0], trianglePosition[1], trianglePosition[2]);
 
-        mARAppCamera = new ARAppCamera(mARAppContext);
+        mARAppCamera = new ARAppCamera();
         int texture = mARAppCamera.getTexture();
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
@@ -176,8 +174,6 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
         mARAppContext.startCamera(texture);
 
         mTriangle = new Triangle();
-
-
     }
 
     @Override

@@ -24,6 +24,7 @@ dependencies {
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:24.+'
     compile 'com.google.protobuf.nano:protobuf-javanano:3.0.0-alpha-7'
+    compile 'me.dm7.barcodescanner:zxing:1.8.4'
     compile project(':base')
     compile project(':common')
 }

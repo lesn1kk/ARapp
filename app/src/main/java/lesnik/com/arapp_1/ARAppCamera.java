@@ -9,13 +9,16 @@ import java.nio.FloatBuffer;
 
 import javax.microedition.khronos.opengles.GL10;
 
+@SuppressWarnings("FieldCanBeLocal")
 public class ARAppCamera {
 
+    private String TAG = "ARAppCamera";
+
+    // Below are variables used in OpenGL program
     private FloatBuffer screenVertBuffer, textVertBuffer;
     private final int mProgram;
+
     private int mPositionHandle, mTextureCoordHandle;
-    private ARAppActivity cameraContext;
-    private String TAG = "ARAppCamera";
 
     // number of coordinates per vertex in this array
     static final int COORDS_PER_VERTEX = 2;
@@ -36,7 +39,7 @@ public class ARAppCamera {
 
             1.0F, 1.0F,
             0.0F, 1.0F,
-            0.0F, 0.0F };
+            0.0F, 0.0F};
 
     private final int vertexStride = COORDS_PER_VERTEX * 4; // 4 bytes per vertex
 
@@ -46,14 +49,13 @@ public class ARAppCamera {
         return texture;
     }
 
-    private int createTexture()
-    {
+    private int createTexture() {
         int[] texture = new int[1];
 
-        GLES20.glGenTextures(1,texture, 0);
+        GLES20.glGenTextures(1, texture, 0);
         GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, texture[0]);
         GLES20.glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
-                GL10.GL_TEXTURE_MIN_FILTER,GL10.GL_LINEAR);
+                GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_LINEAR);
         GLES20.glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
                 GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
         GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
@@ -64,9 +66,7 @@ public class ARAppCamera {
         return texture[0];
     }
 
-    public ARAppCamera(ARAppActivity _cameraContext)
-    {
-        cameraContext = _cameraContext;
+    public ARAppCamera() {
         texture = createTexture();
 
         ByteBuffer bb = ByteBuffer.allocateDirect(screenVert.length * 4);
@@ -90,8 +90,7 @@ public class ARAppCamera {
         GLES20.glLinkProgram(mProgram);
     }
 
-    public void draw()
-    {
+    public void draw() {
         GLES20.glUseProgram(mProgram);
 
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
