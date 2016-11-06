@@ -4,10 +4,10 @@ import android.content.Context;
 
 import com.google.vr.sdk.base.GvrView;
 
-class ARAppGvrView extends GvrView {
+class ARAppView extends GvrView {
     ARAppStereoRenderer mARAppRenderer;
 
-    public ARAppGvrView(Context context) {
+    public ARAppView(Context context) {
         super(context);
 
         setEGLContextClientVersion(2);

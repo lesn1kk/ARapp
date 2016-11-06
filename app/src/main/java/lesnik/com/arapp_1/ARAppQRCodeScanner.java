@@ -6,9 +6,10 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
-public class QRScannerLine {
+public class ARAppQRCodeScanner {
     private final int mProgram;
     private FloatBuffer vertexBuffer;
+    private IResultHandler mResultHandler;
 
     static final int COORDS_PER_VERTEX = 2;
 
@@ -19,7 +20,7 @@ public class QRScannerLine {
 
     float color[] = {1.0f, 0.0f, 0.0f, 1.0f}; //set line color to red
 
-    public QRScannerLine() {
+    public ARAppQRCodeScanner() {
         // initialize vertex byte buffer for shape coordinates
         ByteBuffer bb = ByteBuffer.allocateDirect(
                 // (number of coordinate values * 4 bytes per float)
@@ -106,5 +107,6 @@ public class QRScannerLine {
             counter = 0;
         }
     }
+
 
 }

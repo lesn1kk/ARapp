@@ -26,27 +26,50 @@ import java.util.EnumMap;
 import java.util.List;
 
 @SuppressWarnings("deprecation, unchecked")
-public class ARAppActivity extends GvrActivity implements ResultHandler, Camera.PreviewCallback {
+public class ARAppActivity extends GvrActivity implements IResultHandler, Camera.PreviewCallback {
 
     private Camera mCamera;
     private ARAppStereoRenderer renderer;
-    private String TAG = "ARAppActivity";
     private Vibrator vibrator;
     private MultiFormatReader mMultiFormatReader;
-    private ResultHandler mResultHandler;
     static final List<BarcodeFormat> ALL_FORMATS = new ArrayList();
+    private IResultHandler mResultHandler;
+    private String TAG = this.getClass().getName();
+    private ARAppSpeech mARAppSpeech;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        ARAppGvrView glSurfaceView = new ARAppGvrView(this);
+        ARAppView glSurfaceView = new ARAppView(this);
 
         renderer = glSurfaceView.getRenderer();
         setContentView(glSurfaceView);
 
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
         initMultiFormatReader();
+
+        mARAppSpeech = ARAppSpeech.getInstance();
+        mARAppSpeech.init(this);
+    }
+
+    @Override
+    public void handleResult(Result mResult) {
+        Log.e(TAG, mResult.getText());
+    }
+
+    public void turnOnQRCodeScanner() {
+        ARAppStereoRenderer.drawLine = true;
+        mResultHandler = this;
+    }
+
+    public void turnOffQRCodeScanner() {
+        ARAppStereoRenderer.drawLine = false;
+        mResultHandler = null;
+    }
+
+    public Context getContext() {
+        return this;
     }
 
     public void focusOnClick() {
@@ -86,28 +109,24 @@ public class ARAppActivity extends GvrActivity implements ResultHandler, Camera.
 //            params.getPictureSize();
 
             //params.setPictureSize(1920,1080);
-            //params.setPreviewSize(1280, 720);
+            params.setPreviewSize(1280, 720);
 
             mCamera.setParameters(params);
             mCamera.startPreview();
 
-        } catch (IOException ioe) {
-            Log.w("ARAppActivity", "CAM LAUNCH FAILED");
-            System.out.println("Camera error");
+        } catch (IOException ex) {
+            Log.e(TAG, "CAM LAUNCH FAILED");
         }
     }
 
     @Override
     public void onPause() {
         //TODO Handle this properly
+        super.onPause();
+
         mCamera.stopPreview();
         mCamera.release();
         System.exit(0);
-    }
-
-    @Override
-    public void handleResult(Result result) {
-        Log.e("handleResult", result.getText());
     }
 
     @Override
@@ -115,13 +134,12 @@ public class ARAppActivity extends GvrActivity implements ResultHandler, Camera.
         Log.i(TAG, "onCardboardTrigger");
 
         // Always give user feedback.
+        vibrator.vibrate(50);
+        // Focus to get better image quality and results from QRCodeScanner
         focusOnClick();
 
-        // Turn on scanner
-        // Set this class as a result handler
-        mResultHandler = this;
-        vibrator.vibrate(50);
-        ARAppStereoRenderer.drawLine = true;
+        // Turn on speech recognition
+        mARAppSpeech.startListening();
     }
 
     @Override
@@ -151,50 +169,50 @@ public class ARAppActivity extends GvrActivity implements ResultHandler, Camera.
                     ++source;
                 }
 
-                Result var22 = null;
-                PlanarYUVLuminanceSource var23 = this.buildLuminanceSource(data, width, height);
+                Result mResult = null;
+                PlanarYUVLuminanceSource mSource = this.buildLuminanceSource(data, width, height);
 
-                if (var23 != null) {
-                    BinaryBitmap var24 = new BinaryBitmap(new HybridBinarizer(var23));
+                if (mSource != null) {
+                    BinaryBitmap mBitMap = new BinaryBitmap(new HybridBinarizer(mSource));
 
                     try {
-                        var22 = this.mMultiFormatReader.decodeWithState(var24);
-                    } catch (ReaderException var17) {
-                        ;
-                    } catch (NullPointerException var18) {
-                        ;
-                    } catch (ArrayIndexOutOfBoundsException var19) {
-                        ;
+                        mResult = this.mMultiFormatReader.decodeWithState(mBitMap);
+                    } catch (ReaderException|NullPointerException|ArrayIndexOutOfBoundsException ex) {
+                        System.out.println("NOT FOUND EX");
+                        Log.e(TAG, ex.toString());
+                        ex.printStackTrace();
                     } finally {
                         this.mMultiFormatReader.reset();
                     }
                 }
 
-                final Result var22copy = var22;
+                final Result mResultCopy = mResult;
 
-                if (var22 != null) {
+                if (mResult != null) {
                     Handler handler = new Handler(Looper.getMainLooper());
                     handler.post(new Runnable() {
                         public void run() {
-                            ResultHandler tmpResultHandler = mResultHandler;
-                            mResultHandler = null; // turn off scanning after finding one
+                            IResultHandler tmpResultHandler = mResultHandler;
+                            // turn off scanning after finding one
+                            turnOffQRCodeScanner();
+
                             if (tmpResultHandler != null) {
-                                tmpResultHandler.handleResult(var22copy);
+                                tmpResultHandler.handleResult(mResultCopy);
                             }
 
                         }
                     });
                 }
-
-            } catch (RuntimeException var21) {
-                Log.e("ZXingScannerView", var21.toString(), var21);
+            } catch (RuntimeException ex) {
+                Log.e(TAG, ex.toString(), ex);
+                ex.printStackTrace();
             }
 
         }
     }
 
     public PlanarYUVLuminanceSource buildLuminanceSource(byte[] data, int width, int height) {
-        //TODO Draw a square or rect on view and tell user to hold qrcode inside of it, then get its coordinates, wight and height
+        //TODO Draw a square or rect on view and tell user to hold qrcode inside of it, then get its coordinates, width and height
 //        Rect rect = this.getFramingRectInPreview(width, height);
 //        if(rect == null) {
 //            return null;
@@ -203,8 +221,9 @@ public class ARAppActivity extends GvrActivity implements ResultHandler, Camera.
 
         try {
             source = new PlanarYUVLuminanceSource(data, width, height, 0, 0, width, height, false);
-        } catch (Exception var7) {
-            ;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            Log.e(TAG, ex.toString(), ex);
         }
 
         return source;

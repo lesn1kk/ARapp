@@ -21,7 +21,7 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
     private SurfaceTexture surface;
     static ARAppActivity mARAppContext;
     private Triangle mTriangle;
-    private QRScannerLine mLine;
+    private ARAppQRCodeScanner mLine;
 
     private static final float Z_NEAR = 0.1f;
     private static final float Z_FAR = 100.0f;
@@ -168,6 +168,8 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
 
     @Override
     public void onSurfaceCreated(javax.microedition.khronos.egl.EGLConfig eglConfig) {
+
+        //TODO Implement singleton instances
         Matrix.setIdentityM(triangleModel, 0);
         Matrix.translateM(triangleModel, 0, trianglePosition[0], trianglePosition[1], trianglePosition[2]);
 
@@ -179,7 +181,7 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
         mARAppContext.startCamera(texture);
 
         mTriangle = new Triangle();
-        mLine = new QRScannerLine();
+        mLine = new ARAppQRCodeScanner();
     }
 
     @Override
