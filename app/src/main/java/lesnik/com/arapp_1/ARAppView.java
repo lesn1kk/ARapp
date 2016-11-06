@@ -12,7 +12,7 @@ class ARAppView extends GvrView {
 
         setEGLContextClientVersion(2);
 
-        mARAppRenderer = new ARAppStereoRenderer((ARAppActivity) context);
+        mARAppRenderer = new ARAppStereoRenderer(context);
         setRenderer(mARAppRenderer);
         //this.setTransitionViewEnabled(true);
     }

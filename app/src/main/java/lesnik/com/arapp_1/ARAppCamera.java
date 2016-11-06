@@ -1,8 +1,13 @@
 package lesnik.com.arapp_1;
 
+import android.content.Context;
+import android.graphics.SurfaceTexture;
+import android.hardware.Camera;
 import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
+import android.util.Log;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -12,16 +17,16 @@ import javax.microedition.khronos.opengles.GL10;
 @SuppressWarnings("FieldCanBeLocal")
 public class ARAppCamera {
 
-    private String TAG = "ARAppCamera";
+    private static String TAG = "ARAppCamera";
 
     // Below are variables used in OpenGL program
     private FloatBuffer screenVertBuffer, textVertBuffer;
     private final int mProgram;
+    private ARAppActivity mContext;
+    private static Camera mCamera;
+    private ARAppStereoRenderer mRenderer;
 
     private int mPositionHandle, mTextureCoordHandle;
-
-    // number of coordinates per vertex in this array
-    static final int COORDS_PER_VERTEX = 2;
 
     private float[] screenVert = {
             -1.0F, 1.0F,
@@ -41,6 +46,8 @@ public class ARAppCamera {
             0.0F, 1.0F,
             0.0F, 0.0F};
 
+    // number of coordinates per vertex in this array
+    static final int COORDS_PER_VERTEX = 2;
     private final int vertexStride = COORDS_PER_VERTEX * 4; // 4 bytes per vertex
 
     private int texture;
@@ -66,7 +73,8 @@ public class ARAppCamera {
         return texture[0];
     }
 
-    public ARAppCamera() {
+    public ARAppCamera(Context _mContext) {
+        mContext = (ARAppActivity)_mContext;
         texture = createTexture();
 
         ByteBuffer bb = ByteBuffer.allocateDirect(screenVert.length * 4);
@@ -111,5 +119,58 @@ public class ARAppCamera {
         GLES20.glDisableVertexAttribArray(mTextureCoordHandle);
     }
 
+    public void startCamera(int textureR) {
+        SurfaceTexture surface = new SurfaceTexture(texture);
+        mRenderer = mContext.getARAppView().getRenderer();
+        mRenderer.setSurface(surface);
+
+        mCamera = Camera.open();
+
+        try {
+            mCamera.setPreviewTexture(surface);
+            mCamera.setPreviewCallback(mContext);
+            //set camera to continually auto-focus
+            Camera.Parameters params = mCamera.getParameters();
+            //*EDIT*//params.setFocusMode("continuous-picture");
+            //It is better to use defined constraints as opposed to String, thanks to AbdelHady
+            params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
+
+//            List<int[]> list = params.getSupportedPreviewFpsRange();
+//            params.setPreviewFrameRate(30);
+//            params.setWhiteBalance(Camera.Parameters.WHITE_BALANCE_CLOUDY_DAYLIGHT);
+//            params.setPreviewFpsRange(1000,30000);
+//            params.getPictureSize();
+
+            //params.setPictureSize(1920,1080);
+            params.setPreviewSize(1280, 720);
+
+            mCamera.setParameters(params);
+            mCamera.startPreview();
+
+        } catch (IOException ex) {
+            Log.e(TAG, "CAM LAUNCH FAILED");
+        }
+    }
+
+    public static Camera getCamera() {
+        return mCamera;
+    }
+
+    public static void focusCamera() {
+        if(mCamera != null) {
+            try {
+                mCamera.cancelAutoFocus();
+                mCamera.autoFocus(new Camera.AutoFocusCallback() {
+                    @Override
+                    public void onAutoFocus(boolean success, Camera camera) {
+
+                    }
+                });
+            } catch (Exception e) {
+                Log.e(TAG, "Error during focusCamera!");
+                e.printStackTrace();
+            }
+        }
+    }
 }
 

@@ -1,5 +1,6 @@
 package lesnik.com.arapp_1;
 
+import android.content.Context;
 import android.graphics.SurfaceTexture;
 import android.opengl.GLES20;
 import android.opengl.Matrix;
@@ -19,7 +20,7 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
 
     ARAppCamera mARAppCamera;
     private SurfaceTexture surface;
-    static ARAppActivity mARAppContext;
+    static ARAppActivity mContext;
     private Triangle mTriangle;
     private ARAppQRCodeScanner mLine;
 
@@ -46,7 +47,7 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
      * @return The context of the text file, or null in case of error.
      */
     private static String readRawTextFile(int resId) {
-        InputStream inputStream = mARAppContext.getResources().openRawResource(resId);
+        InputStream inputStream = mContext.getResources().openRawResource(resId);
         try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
             StringBuilder sb = new StringBuilder();
@@ -112,8 +113,8 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
         return shader;
     }
 
-    public ARAppStereoRenderer(ARAppActivity _cameraContext) {
-        mARAppContext = _cameraContext;
+    public ARAppStereoRenderer(Context _mContext) {
+        mContext = (ARAppActivity)_mContext;
 
         triangleModel = new float[16];
 
@@ -173,15 +174,17 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
         Matrix.setIdentityM(triangleModel, 0);
         Matrix.translateM(triangleModel, 0, trianglePosition[0], trianglePosition[1], trianglePosition[2]);
 
-        mARAppCamera = new ARAppCamera();
+        mARAppCamera = new ARAppCamera(mContext);
+
         int texture = mARAppCamera.getTexture();
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
+        mLine = new ARAppQRCodeScanner();
+
         surface = new SurfaceTexture(texture);
-        mARAppContext.startCamera(texture);
+        mARAppCamera.startCamera(texture);
 
         mTriangle = new Triangle();
-        mLine = new ARAppQRCodeScanner();
     }
 
     @Override

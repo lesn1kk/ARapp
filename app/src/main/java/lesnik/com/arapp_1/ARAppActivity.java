@@ -28,25 +28,30 @@ import java.util.List;
 @SuppressWarnings("deprecation, unchecked")
 public class ARAppActivity extends GvrActivity implements IResultHandler, Camera.PreviewCallback {
 
-    private Camera mCamera;
-    private ARAppStereoRenderer renderer;
-    private Vibrator vibrator;
+    static ARAppStereoRenderer mRenderer;
+    private Vibrator mVibrator;
     private MultiFormatReader mMultiFormatReader;
     static final List<BarcodeFormat> ALL_FORMATS = new ArrayList();
     private IResultHandler mResultHandler;
     private String TAG = this.getClass().getName();
     private ARAppSpeech mARAppSpeech;
+    private ARAppView mARAppView;
+
+    public ARAppView getARAppView() {
+        return mARAppView;
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        ARAppView glSurfaceView = new ARAppView(this);
+        mARAppView = new ARAppView(this);
 
-        renderer = glSurfaceView.getRenderer();
-        setContentView(glSurfaceView);
+        mRenderer = mARAppView.getRenderer();
+        setContentView(mARAppView);
 
-        vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+        mVibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+
         initMultiFormatReader();
 
         mARAppSpeech = ARAppSpeech.getInstance();
@@ -68,64 +73,13 @@ public class ARAppActivity extends GvrActivity implements IResultHandler, Camera
         mResultHandler = null;
     }
 
-    public Context getContext() {
-        return this;
-    }
-
-    public void focusOnClick() {
-        try {
-            mCamera.cancelAutoFocus();
-            mCamera.autoFocus(new Camera.AutoFocusCallback() {
-                @Override
-                public void onAutoFocus(boolean success, Camera camera) {
-
-                }
-            });
-        } catch (Exception e) {
-            Log.e(TAG, "Error during focusOnClick!");
-            e.printStackTrace();
-        }
-    }
-
-    public void startCamera(int texture) {
-        SurfaceTexture surface = new SurfaceTexture(texture);
-        renderer.setSurface(surface);
-
-        mCamera = Camera.open();
-
-        try {
-            mCamera.setPreviewTexture(surface);
-            mCamera.setPreviewCallback(this);
-            //set camera to continually auto-focus
-            Camera.Parameters params = mCamera.getParameters();
-            //*EDIT*//params.setFocusMode("continuous-picture");
-            //It is better to use defined constraints as opposed to String, thanks to AbdelHady
-            params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
-
-//            List<int[]> list = params.getSupportedPreviewFpsRange();
-//            params.setPreviewFrameRate(30);
-//            params.setWhiteBalance(Camera.Parameters.WHITE_BALANCE_CLOUDY_DAYLIGHT);
-//            params.setPreviewFpsRange(1000,30000);
-//            params.getPictureSize();
-
-            //params.setPictureSize(1920,1080);
-            params.setPreviewSize(1280, 720);
-
-            mCamera.setParameters(params);
-            mCamera.startPreview();
-
-        } catch (IOException ex) {
-            Log.e(TAG, "CAM LAUNCH FAILED");
-        }
-    }
-
     @Override
     public void onPause() {
         //TODO Handle this properly
         super.onPause();
 
-        mCamera.stopPreview();
-        mCamera.release();
+        ARAppCamera.getCamera().stopPreview();
+        ARAppCamera.getCamera().release();
         System.exit(0);
     }
 
@@ -134,14 +88,16 @@ public class ARAppActivity extends GvrActivity implements IResultHandler, Camera
         Log.i(TAG, "onCardboardTrigger");
 
         // Always give user feedback.
-        vibrator.vibrate(50);
+        mVibrator.vibrate(50);
+
         // Focus to get better image quality and results from QRCodeScanner
-        focusOnClick();
+        ARAppCamera.focusCamera();
 
         // Turn on speech recognition
         mARAppSpeech.startListening();
     }
 
+    // I need to handle every frame here, in main activity class, because I need context class to do it
     @Override
     public void onPreviewFrame(byte[] data, Camera camera) {
         if (this.mResultHandler != null) {
@@ -178,9 +134,7 @@ public class ARAppActivity extends GvrActivity implements IResultHandler, Camera
                     try {
                         mResult = this.mMultiFormatReader.decodeWithState(mBitMap);
                     } catch (ReaderException|NullPointerException|ArrayIndexOutOfBoundsException ex) {
-                        System.out.println("NOT FOUND EX");
-                        Log.e(TAG, ex.toString());
-                        ex.printStackTrace();
+
                     } finally {
                         this.mMultiFormatReader.reset();
                     }

@@ -1,5 +1,6 @@
 package lesnik.com.arapp_1;
 
+import android.hardware.Camera;
 import android.opengl.GLES20;
 
 import java.nio.ByteBuffer;
@@ -9,7 +10,6 @@ import java.nio.FloatBuffer;
 public class ARAppQRCodeScanner {
     private final int mProgram;
     private FloatBuffer vertexBuffer;
-    private IResultHandler mResultHandler;
 
     static final int COORDS_PER_VERTEX = 2;
 
@@ -85,7 +85,7 @@ public class ARAppQRCodeScanner {
         //GLES20.glUniformMatrix4fv(lineProjectionViewParam, 1, false, lineMatrix, 0);
         GLES20.glUniform4fv(lineProjectionViewParam, 1, lineMatrix, 0);
 
-        // Set color for drawing the triangle
+        // Set color for drawing the line
         GLES20.glUniform4fv(mColorHandle, 1, color, 0);
 
         // Draw the triangle
@@ -107,6 +107,4 @@ public class ARAppQRCodeScanner {
             counter = 0;
         }
     }
-
-
 }
