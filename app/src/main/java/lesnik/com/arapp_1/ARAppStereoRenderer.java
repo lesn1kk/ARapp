@@ -1,8 +1,11 @@
 package lesnik.com.arapp_1;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.SurfaceTexture;
 import android.opengl.GLES20;
+import android.opengl.GLUtils;
 import android.opengl.Matrix;
 import android.util.Log;
 
@@ -15,8 +18,21 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.FloatBuffer;
+import java.nio.ShortBuffer;
 
 public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
+    // Our matrices
+    private final float[] mtrxProjection = new float[16];
+    private final float[] mtrxView = new float[16];
+    private final float[] mtrxProjectionAndView = new float[16];
+
+    // Geometric variables
+    public TextManager tm;
+
+    // Our screenresolution
+    float	mScreenWidth = 1280;
+    float	mScreenHeight = 768;
 
     ARAppCamera mARAppCamera;
     private SurfaceTexture surface;
@@ -155,6 +171,10 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
         if(drawLine) {
             mLine.draw();
         }
+
+        if(tm!=null) {
+            tm.Draw(mtrxProjectionAndView);
+        }
     }
 
     @Override
@@ -164,6 +184,17 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
 
     @Override
     public void onSurfaceChanged(int i, int i1) {
+        mScreenWidth = i;
+        mScreenHeight = i1;
+
+        // Setup our screen width and height for normal sprite translation.
+        Matrix.orthoM(mtrxProjection, 0, 0f, mScreenWidth, 0.0f, mScreenHeight, 0, 50);
+
+        // Set the camera position (View matrix)
+        Matrix.setLookAtM(mtrxView, 0, 0f, 0f, 1f, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
+
+        // Calculate the projection and view transformation
+        Matrix.multiplyMM(mtrxProjectionAndView, 0, mtrxProjection, 0, mtrxView, 0);
 
     }
 
@@ -185,6 +216,57 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
         mARAppCamera.startCamera(texture);
 
         mTriangle = new Triangle();
+
+        //TODO Move this code out of here
+        GLES20.glEnable(GLES20.GL_BLEND);
+        GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+        // Create our texts
+        SetupText();
+
+        // Create our text manager
+        tm = new TextManager();
+
+        // Tell our text manager to use index 1 of textures loaded
+        tm.setTextureID(1);
+
+        // Pass the uniform scale
+        tm.setUniformscale(3.0f);
+
+        // Create our new textobject
+        TextObject txt = new TextObject("testing elloo", 10f, 10f);
+
+        // Add it to our manager
+        tm.addText(txt);
+
+        // Prepare the text for rendering
+        tm.PrepareDraw();
+    }
+
+    public void SetupText()
+    {
+        // Again for the text texture
+        int id = mContext.getResources().getIdentifier("drawable/font", null, mContext.getPackageName());
+        Bitmap bmp = BitmapFactory.decodeResource(mContext.getResources(), id);
+        GLES20.glActiveTexture(GLES20.GL_TEXTURE0 );
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0);
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
+        GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bmp, 0);
+
+        GLES20.glEnable(GLES20.GL_BLEND);
+        GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+
+        // Text shader
+        int vshadert = riGraphicTools.loadShader(GLES20.GL_VERTEX_SHADER, riGraphicTools.vs_Text);
+        int fshadert = riGraphicTools.loadShader(GLES20.GL_FRAGMENT_SHADER, riGraphicTools.fs_Text);
+
+        riGraphicTools.sp_Text = GLES20.glCreateProgram();
+        GLES20.glAttachShader(riGraphicTools.sp_Text, vshadert);
+        GLES20.glAttachShader(riGraphicTools.sp_Text, fshadert); 		// add the fragment shader to program
+        GLES20.glLinkProgram(riGraphicTools.sp_Text);                  // creates OpenGL ES program executables
+
+        // Set our shader programm
+        GLES20.glUseProgram(riGraphicTools.sp_Image);
     }
 
     @Override
