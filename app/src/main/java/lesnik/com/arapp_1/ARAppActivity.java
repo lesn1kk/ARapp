@@ -96,7 +96,6 @@ public class ARAppActivity extends GvrActivity implements IResultHandler, Camera
         // Turn on speech recognition
         mARAppSpeech.startListening();
 
-        //ARAppStereoRenderer.addTextObject("error during speech recognition", 10f, 50f, 2.0f);
     }
 
     // I need to handle every frame here, in main activity class, because I need context class to do it

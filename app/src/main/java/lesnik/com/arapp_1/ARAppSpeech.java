@@ -59,10 +59,7 @@ public class ARAppSpeech implements RecognitionListener{
     @Override
     public void onError(int i) {
         Log.e(TAG, "onError " + i);
-
-        ARAppTextObject txtObject = new ARAppTextObject("error during", 10f, 50f);
-        ARAppStereoRenderer.addTextObject(txtObject, 2.0f);
-        ARAppStereoRenderer.enableOrDisableTextObject(txtObject, true);
+        ARAppStereoRenderer.setTexture(R.drawable.font);
     }
 
     @Override

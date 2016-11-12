@@ -23,9 +23,6 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
     private final float[] mtrxView = new float[16];
     private final float[] mtrxProjectionAndView = new float[16];
 
-    // Geometric variables
-    public static ARAppTextManager tm;
-
     // Our screenresolution
     float	mScreenWidth = 1280;
     float	mScreenHeight = 768;
@@ -52,11 +49,8 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
     private static String TAG = "MyGL20Renderer";
 
     public static boolean drawLine = false;
-    public static ArrayList<Boolean> boolTextList = new ArrayList<>();
-    public static ArrayList<ARAppTextObject> strTextList = new ArrayList<>();
-    public static ArrayList<Float> scaleTextList = new ArrayList<>();
 
-    private static boolean isChanged, isPrepared = false;
+    public static int texture = 0;
 
     /**
      * Converts a raw text file into a string.
@@ -151,7 +145,10 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
     public void onNewFrame(HeadTransform headTransform) {
         // Build the camera matrix and apply it to the ModelView.
         Matrix.setLookAtM(camera, 0, 0.0f, 0.0f, CAMERA_Z, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
+
     }
+
+    private static boolean isLoaded = false;
 
     @Override
     public void onDrawEye(Eye eye) {
@@ -160,6 +157,7 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
 
         float[] mtx = new float[16];
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
+        GLES20.glClearColor(0.0f, 200.0f, 0.0f, 1);
         surface.updateTexImage();
         surface.getTransformMatrix(mtx);
 
@@ -174,26 +172,19 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
             mLine.draw();
         }
 
-        if(isChanged) {
-            //tm = null;
-            tm = new ARAppTextManager(mContext);
-
-            tm.setUniformScale(3.0f);
-
-            for(int i = 0; i < strTextList.size(); i++) {
-                if(boolTextList.get(i)) {
-                    tm.addText(strTextList.get(i));
-                }
+        // For now, draw only one texture at once, should be enough
+        if (texture != 0) {
+            if(!isLoaded) {
+                mARAppTextureLoader.loadTexture(texture);
+                isLoaded = true;
             }
-
-            tm.prepareDraw();
-
-            isChanged = false;
+            mARAppTextureLoader.draw(mtrxProjectionAndView);
         }
+    }
 
-        if(isPrepared) {
-            tm.draw(mtrxProjectionAndView);
-        }
+    public static void setTexture(int id) {
+        texture = id;
+        isLoaded = false;
     }
 
     @Override
@@ -217,9 +208,10 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
 
     }
 
+    public static ARAppTextureLoader mARAppTextureLoader;
+
     @Override
     public void onSurfaceCreated(javax.microedition.khronos.egl.EGLConfig eglConfig) {
-
         //TODO Implement singleton instances
         Matrix.setIdentityM(triangleModel, 0);
         Matrix.translateM(triangleModel, 0, trianglePosition[0], trianglePosition[1], trianglePosition[2]);
@@ -227,7 +219,7 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
         mARAppCamera = new ARAppCamera(mContext);
 
         int texture = mARAppCamera.getTexture();
-        GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        GLES20.glClearColor(0.0f, 200.0f, 0.0f, 1.0f);
 
         mLine = new ARAppQRCodeScanner();
 
@@ -237,51 +229,14 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
         mTriangle = new Triangle();
 
         //TODO Move this code out of here
+        mARAppTextureLoader = new ARAppTextureLoader(mContext);
+        mARAppTextureLoader.setup();
 
-        // Create our text manager
-//        tm = new ARAppTextManager(mContext);
-//        //addTextObject("testing elloo", 10f, 10f, 3.0f);
-//
-        isChanged = false;
-
-
-
-//        for(int i = 0; i < strTextList.size(); i++) {
-//            if(boolTextList.get(i)) {
-//                tm.setUniformScale(scaleTextList.get(i));
-//                tm.addText(strTextList.get(i));
-//            }
-//        }
-//
-//        tm.prepareDraw();
     }
 
     @Override
     public void onRendererShutdown() {
 
     }
-
-    public static void addTextObject(ARAppTextObject txt, float scale) {
-        //ARAppTextObject txt = new ARAppTextObject(str, x, y);
-
-        if(!strTextList.contains(txt)) {
-            strTextList.add(txt);
-            scaleTextList.add(scale);
-            boolTextList.add(false);
-        }
-    }
-
-    public static void enableOrDisableTextObject(ARAppTextObject txt, boolean enable) {
-        for(int i = 0; i < strTextList.size(); i++) {
-            if(strTextList.get(i) == txt) {
-                boolTextList.set(i, enable);
-                break;
-            }
-        }
-
-        isChanged = true;
-        isPrepared = true;
-    }
-
 }
 
