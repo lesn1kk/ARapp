@@ -1,13 +1,13 @@
 package lesnik.com.arapp_1;
 
-public class TextObject {
+public class ARAppTextObject {
 	
 	public String text;
 	public float x;
 	public float y;
 	public float[] color;
 	
-	public TextObject()
+	public ARAppTextObject()
 	{
 		text = "default";
 		x = 0f;
@@ -15,7 +15,7 @@ public class TextObject {
 		color = new float[] {1f, 1f, 1f, 1.0f};
 	}
 	
-	public TextObject(String txt, float xcoord, float ycoord)
+	public ARAppTextObject(String txt, float xcoord, float ycoord)
 	{
 		text = txt;
 		x = xcoord;

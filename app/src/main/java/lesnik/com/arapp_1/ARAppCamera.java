@@ -89,8 +89,8 @@ public class ARAppCamera {
         textVertBuffer.put(textVert);
         textVertBuffer.position(0);
 
-        int vertexShader = ARAppStereoRenderer.loadShader(GLES20.GL_VERTEX_SHADER, R.raw.vertex);
-        int fragmentShader = ARAppStereoRenderer.loadShader(GLES20.GL_FRAGMENT_SHADER, R.raw.fragment);
+        int vertexShader = ARAppStereoRenderer.loadShader(GLES20.GL_VERTEX_SHADER, R.raw.cam_vertex);
+        int fragmentShader = ARAppStereoRenderer.loadShader(GLES20.GL_FRAGMENT_SHADER, R.raw.cam_fragment);
 
         mProgram = GLES20.glCreateProgram();             // create empty OpenGL ES Program
         GLES20.glAttachShader(mProgram, vertexShader);   // add the vertex shader to program
@@ -119,7 +119,7 @@ public class ARAppCamera {
         GLES20.glDisableVertexAttribArray(mTextureCoordHandle);
     }
 
-    public void startCamera(int textureR) {
+    public void startCamera(int texture) {
         SurfaceTexture surface = new SurfaceTexture(texture);
         mRenderer = mContext.getARAppView().getRenderer();
         mRenderer.setSurface(surface);

@@ -38,9 +38,9 @@ public class Triangle {
         vertexBuffer.position(0);
 
         int vertexShader = ARAppStereoRenderer.loadShader(GLES20.GL_VERTEX_SHADER,
-                R.raw.vertex_triangle);
+                R.raw.triangle_vertex);
         int fragmentShader = ARAppStereoRenderer.loadShader(GLES20.GL_FRAGMENT_SHADER,
-                R.raw.fragment_triangle);
+                R.raw.triangle_fragment);
 
         // create empty OpenGL ES Program
         mProgram = GLES20.glCreateProgram();
@@ -87,7 +87,7 @@ public class Triangle {
         // Set color for drawing the triangle
         GLES20.glUniform4fv(mColorHandle, 1, color, 0);
 
-        // Draw the triangle
+        // draw the triangle
         GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, vertexCount);
 
         // Disable vertex array

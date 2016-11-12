@@ -1,6 +1,5 @@
 package lesnik.com.arapp_1;
 
-import android.hardware.Camera;
 import android.opengl.GLES20;
 
 import java.nio.ByteBuffer;
@@ -36,9 +35,9 @@ public class ARAppQRCodeScanner {
         vertexBuffer.position(0);
 
         int vertexShader = ARAppStereoRenderer.loadShader(GLES20.GL_VERTEX_SHADER,
-                R.raw.vertex_line);
+                R.raw.line_vertex);
         int fragmentShader = ARAppStereoRenderer.loadShader(GLES20.GL_FRAGMENT_SHADER,
-                R.raw.fragment_line);
+                R.raw.line_fragment);
 
         // create empty OpenGL ES Program
         mProgram = GLES20.glCreateProgram();
@@ -70,9 +69,7 @@ public class ARAppQRCodeScanner {
         // get handle to vertex shader's vPosition member
         // get handle to fragment shader's vColor member
         mPositionHandle = GLES20.glGetAttribLocation(mProgram, "vPosition");
-
         mColorHandle = GLES20.glGetUniformLocation(mProgram, "vColor");
-
         lineProjectionViewParam = GLES20.glGetUniformLocation(mProgram, "u_MVP");
 
         // Enable a handle to the triangle vertices
@@ -88,11 +85,12 @@ public class ARAppQRCodeScanner {
         // Set color for drawing the line
         GLES20.glUniform4fv(mColorHandle, 1, color, 0);
 
-        // Draw the triangle
+        // draw the triangle
         GLES20.glDrawArrays(GLES20.GL_LINES, 0, vertexCount);
 
         // Disable vertex array
         GLES20.glDisableVertexAttribArray(mPositionHandle);
+
         counter++;
 
         //TODO This is temporary solution to see if it works, I need to figure out better way, because this is highly related with phones cpu and gpu power

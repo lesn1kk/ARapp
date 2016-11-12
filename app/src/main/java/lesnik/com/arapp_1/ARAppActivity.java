@@ -95,6 +95,8 @@ public class ARAppActivity extends GvrActivity implements IResultHandler, Camera
 
         // Turn on speech recognition
         mARAppSpeech.startListening();
+
+        //ARAppStereoRenderer.addTextObject("error during speech recognition", 10f, 50f, 2.0f);
     }
 
     // I need to handle every frame here, in main activity class, because I need context class to do it
@@ -134,7 +136,7 @@ public class ARAppActivity extends GvrActivity implements IResultHandler, Camera
                     try {
                         mResult = this.mMultiFormatReader.decodeWithState(mBitMap);
                     } catch (ReaderException|NullPointerException|ArrayIndexOutOfBoundsException ex) {
-
+                        // If we dont find anything, do nothing and continue to scan
                     } finally {
                         this.mMultiFormatReader.reset();
                     }
@@ -166,7 +168,7 @@ public class ARAppActivity extends GvrActivity implements IResultHandler, Camera
     }
 
     public PlanarYUVLuminanceSource buildLuminanceSource(byte[] data, int width, int height) {
-        //TODO Draw a square or rect on view and tell user to hold qrcode inside of it, then get its coordinates, width and height
+        //TODO draw a square or rect on view and tell user to hold qrcode inside of it, then get its coordinates, width and height
 //        Rect rect = this.getFramingRectInPreview(width, height);
 //        if(rect == null) {
 //            return null;

@@ -59,6 +59,10 @@ public class ARAppSpeech implements RecognitionListener{
     @Override
     public void onError(int i) {
         Log.e(TAG, "onError " + i);
+
+        ARAppTextObject txtObject = new ARAppTextObject("error during", 10f, 50f);
+        ARAppStereoRenderer.addTextObject(txtObject, 2.0f);
+        ARAppStereoRenderer.enableOrDisableTextObject(txtObject, true);
     }
 
     @Override
@@ -66,11 +70,18 @@ public class ARAppSpeech implements RecognitionListener{
         Log.e(TAG, "onResults");
 
         ArrayList<String> mResults = bundle.getStringArrayList("results_recognition");
-        for (String m:mResults) {
-            System.out.println(m);
-            switch (m) {
-                case "scan":
-                    mContext.turnOnQRCodeScanner();
+
+        if (mResults != null) {
+            for (String m:mResults) {
+                System.out.println(m);
+                switch (m) {
+                    case "scan":
+                        mContext.turnOnQRCodeScanner();
+                        break;
+                    default:
+                        System.out.println("Default case");
+                        break;
+                }
             }
         }
     }

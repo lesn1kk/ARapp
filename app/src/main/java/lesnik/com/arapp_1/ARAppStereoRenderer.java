@@ -1,11 +1,8 @@
 package lesnik.com.arapp_1;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.SurfaceTexture;
 import android.opengl.GLES20;
-import android.opengl.GLUtils;
 import android.opengl.Matrix;
 import android.util.Log;
 
@@ -18,8 +15,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.FloatBuffer;
-import java.nio.ShortBuffer;
+import java.util.ArrayList;
 
 public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
     // Our matrices
@@ -28,7 +24,7 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
     private final float[] mtrxProjectionAndView = new float[16];
 
     // Geometric variables
-    public TextManager tm;
+    public static ARAppTextManager tm;
 
     // Our screenresolution
     float	mScreenWidth = 1280;
@@ -56,6 +52,12 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
     private static String TAG = "MyGL20Renderer";
 
     public static boolean drawLine = false;
+    public static ArrayList<Boolean> boolTextList = new ArrayList<>();
+    public static ArrayList<ARAppTextObject> strTextList = new ArrayList<>();
+    public static ArrayList<Float> scaleTextList = new ArrayList<>();
+
+    private static boolean isChanged, isPrepared = false;
+
     /**
      * Converts a raw text file into a string.
      *
@@ -172,8 +174,25 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
             mLine.draw();
         }
 
-        if(tm!=null) {
-            tm.Draw(mtrxProjectionAndView);
+        if(isChanged) {
+            //tm = null;
+            tm = new ARAppTextManager(mContext);
+
+            tm.setUniformScale(3.0f);
+
+            for(int i = 0; i < strTextList.size(); i++) {
+                if(boolTextList.get(i)) {
+                    tm.addText(strTextList.get(i));
+                }
+            }
+
+            tm.prepareDraw();
+
+            isChanged = false;
+        }
+
+        if(isPrepared) {
+            tm.draw(mtrxProjectionAndView);
         }
     }
 
@@ -218,60 +237,51 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
         mTriangle = new Triangle();
 
         //TODO Move this code out of here
-        GLES20.glEnable(GLES20.GL_BLEND);
-        GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-        // Create our texts
-        SetupText();
 
         // Create our text manager
-        tm = new TextManager();
+//        tm = new ARAppTextManager(mContext);
+//        //addTextObject("testing elloo", 10f, 10f, 3.0f);
+//
+        isChanged = false;
 
-        // Tell our text manager to use index 1 of textures loaded
-        tm.setTextureID(1);
 
-        // Pass the uniform scale
-        tm.setUniformscale(3.0f);
 
-        // Create our new textobject
-        TextObject txt = new TextObject("testing elloo", 10f, 10f);
-
-        // Add it to our manager
-        tm.addText(txt);
-
-        // Prepare the text for rendering
-        tm.PrepareDraw();
-    }
-
-    public void SetupText()
-    {
-        // Again for the text texture
-        int id = mContext.getResources().getIdentifier("drawable/font", null, mContext.getPackageName());
-        Bitmap bmp = BitmapFactory.decodeResource(mContext.getResources(), id);
-        GLES20.glActiveTexture(GLES20.GL_TEXTURE0 );
-        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0);
-        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
-        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
-        GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bmp, 0);
-
-        GLES20.glEnable(GLES20.GL_BLEND);
-        GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-
-        // Text shader
-        int vshadert = riGraphicTools.loadShader(GLES20.GL_VERTEX_SHADER, riGraphicTools.vs_Text);
-        int fshadert = riGraphicTools.loadShader(GLES20.GL_FRAGMENT_SHADER, riGraphicTools.fs_Text);
-
-        riGraphicTools.sp_Text = GLES20.glCreateProgram();
-        GLES20.glAttachShader(riGraphicTools.sp_Text, vshadert);
-        GLES20.glAttachShader(riGraphicTools.sp_Text, fshadert); 		// add the fragment shader to program
-        GLES20.glLinkProgram(riGraphicTools.sp_Text);                  // creates OpenGL ES program executables
-
-        // Set our shader programm
-        GLES20.glUseProgram(riGraphicTools.sp_Image);
+//        for(int i = 0; i < strTextList.size(); i++) {
+//            if(boolTextList.get(i)) {
+//                tm.setUniformScale(scaleTextList.get(i));
+//                tm.addText(strTextList.get(i));
+//            }
+//        }
+//
+//        tm.prepareDraw();
     }
 
     @Override
     public void onRendererShutdown() {
 
     }
+
+    public static void addTextObject(ARAppTextObject txt, float scale) {
+        //ARAppTextObject txt = new ARAppTextObject(str, x, y);
+
+        if(!strTextList.contains(txt)) {
+            strTextList.add(txt);
+            scaleTextList.add(scale);
+            boolTextList.add(false);
+        }
+    }
+
+    public static void enableOrDisableTextObject(ARAppTextObject txt, boolean enable) {
+        for(int i = 0; i < strTextList.size(); i++) {
+            if(strTextList.get(i) == txt) {
+                boolTextList.set(i, enable);
+                break;
+            }
+        }
+
+        isChanged = true;
+        isPrepared = true;
+    }
+
 }
 
