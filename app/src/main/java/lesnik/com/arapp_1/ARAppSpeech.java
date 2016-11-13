@@ -2,12 +2,19 @@ package lesnik.com.arapp_1;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.os.Environment;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.util.Log;
+import android.view.View;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class ARAppSpeech implements RecognitionListener{
@@ -34,6 +41,8 @@ public class ARAppSpeech implements RecognitionListener{
         mSpeechRecognizer.startListening(mIntent);
 
         Log.e(TAG, "startListening");
+        ARAppStereoRenderer.onErrorListening = false;
+        ARAppStereoRenderer.setTexture(R.drawable.listening);
     }
 
     @Override
@@ -59,7 +68,8 @@ public class ARAppSpeech implements RecognitionListener{
     @Override
     public void onError(int i) {
         Log.e(TAG, "onError " + i);
-        ARAppStereoRenderer.setTexture(R.drawable.font);
+        ARAppStereoRenderer.onErrorListening = true;
+        ARAppStereoRenderer.isLoaded = false;
     }
 
     @Override
@@ -74,6 +84,18 @@ public class ARAppSpeech implements RecognitionListener{
                 switch (m) {
                     case "scan":
                         mContext.turnOnQRCodeScanner();
+                        ARAppStereoRenderer.setTexture(R.drawable.scanningmode);
+                        break;
+                    case "screenshot":
+//                        Process process;
+//                        try {
+//                            process = Runtime.getRuntime().exec("input keyevent 120");
+//                            System.out.println("DID IT WORKED?");
+//                        } catch (IOException e) {
+//                            e.printStackTrace();
+//                        }
+                        ARAppStereoRenderer.setTexture(R.drawable.takingscreenshot);
+                        ARAppStereoRenderer.takeScreenshot = true;
                         break;
                     default:
                         System.out.println("Default case");

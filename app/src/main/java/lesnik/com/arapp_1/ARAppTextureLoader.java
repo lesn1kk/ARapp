@@ -34,10 +34,10 @@ public class ARAppTextureLoader {
 
         // We have to create the vertices of our triangle. This is actually size.
         vertices = new float[]
-                {       10.0f, 250f, 0.0f,
-                        10.0f, 50f, 0.0f,
-                        300f, 50f, 0.0f,
-                        300f, 250f, 0.0f,
+                {       0.0f, 480f, 0.0f,
+                        0.0f, 0.0f, 0.0f,
+                        640f, 0.0f, 0.0f,
+                        640f, 480f, 0.0f,
                 };
 
         // Create our UV coordinates.

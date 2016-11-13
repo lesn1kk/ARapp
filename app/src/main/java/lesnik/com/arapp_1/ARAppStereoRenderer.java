@@ -1,9 +1,11 @@
 package lesnik.com.arapp_1;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.SurfaceTexture;
 import android.opengl.GLES20;
 import android.opengl.Matrix;
+import android.os.Environment;
 import android.util.Log;
 
 import com.google.vr.sdk.base.Eye;
@@ -12,20 +14,27 @@ import com.google.vr.sdk.base.HeadTransform;
 import com.google.vr.sdk.base.Viewport;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
-public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
+public class ARAppStereoRenderer implements GvrView.StereoRenderer {
     // Our matrices
     private final float[] mtrxProjection = new float[16];
     private final float[] mtrxView = new float[16];
     private final float[] mtrxProjectionAndView = new float[16];
 
+    private final float[] mLineView = new float[16];
+    private final float[] mLineProjectionAndView = new float[16];
+
     // Our screenresolution
-    float	mScreenWidth = 1280;
-    float	mScreenHeight = 768;
+    float	mScreenWidth = 640;
+    float	mScreenHeight = 480;
 
     ARAppCamera mARAppCamera;
     private SurfaceTexture surface;
@@ -79,28 +88,10 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
      * Converts a raw text file, saved as a resource, into an OpenGL ES shader.
      *
      * @param type  The type of shader we will be creating.
-     * @param shaderCode Raw text file about to be turned into a shader.
-     * @return The shader object handler.
-     */
-    public static int loadShader(int type, String shaderCode) {
-        // create a vertex shader type (GLES20.GL_VERTEX_SHADER)
-        // or a fragment shader type (GLES20.GL_FRAGMENT_SHADER)
-        int shader = GLES20.glCreateShader(type);
-
-        // add the source code to the shader and compile it
-        GLES20.glShaderSource(shader, shaderCode);
-        GLES20.glCompileShader(shader);
-
-        return shader;
-    }
-
-    /**
-     * Converts a raw text into an OpenGL ES shader.
-     *
-     * @param type  The type of shader we will be creating.
      * @param resId The resource ID of the raw text file about to be turned into a shader.
      * @return The shader object handler.
      */
+
     public static int loadShader(int type, int resId) {
         String code = readRawTextFile(resId);
         int shader = GLES20.glCreateShader(type);
@@ -125,11 +116,20 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
         return shader;
     }
 
-    public ARAppStereoRenderer(Context _mContext) {
+    private static ARAppStereoRenderer mRenderer;
+
+    public static void createInstance(Context _mContext) {
+        mRenderer = new ARAppStereoRenderer(_mContext);
+    }
+
+    public static ARAppStereoRenderer getInstance() {
+        return mRenderer;
+    }
+
+    private ARAppStereoRenderer(Context _mContext) {
         mContext = (ARAppActivity)_mContext;
 
         triangleModel = new float[16];
-
         camera = new float[16];
         view = new float[16];
         triangleViewProjection = new float[16];
@@ -145,10 +145,9 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
     public void onNewFrame(HeadTransform headTransform) {
         // Build the camera matrix and apply it to the ModelView.
         Matrix.setLookAtM(camera, 0, 0.0f, 0.0f, CAMERA_Z, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
-
     }
 
-    private static boolean isLoaded = false;
+    public static boolean isLoaded = false;
 
     @Override
     public void onDrawEye(Eye eye) {
@@ -169,18 +168,25 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
         mTriangle.draw(triangleViewProjection);
 
         if(drawLine) {
-            mLine.draw();
+            mLine.draw(mLineProjectionAndView);
         }
 
         // For now, draw only one texture at once, should be enough
         if (texture != 0) {
             if(!isLoaded) {
-                mARAppTextureLoader.loadTexture(texture);
+                if(onErrorListening) {
+                    mARAppTextureLoader.loadTexture(R.drawable.errorlistening);
+                } else {
+                    mARAppTextureLoader.loadTexture(texture);
+                }
                 isLoaded = true;
             }
             mARAppTextureLoader.draw(mtrxProjectionAndView);
         }
     }
+
+    public static boolean onErrorListening = false;
+    public static boolean takeScreenshot = false;
 
     public static void setTexture(int id) {
         texture = id;
@@ -189,7 +195,40 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
 
     @Override
     public void onFinishFrame(Viewport viewport) {
+        if (takeScreenshot) { // TODO ?Make sure we load proper texture takingscreenshot before
+            int width = viewport.width;
+            int height = viewport.height;
+            int screenshotSize = width * height;
 
+            ByteBuffer bb = ByteBuffer.allocateDirect(screenshotSize * 4);
+            bb.order(ByteOrder.nativeOrder());
+            GLES20.glReadPixels(0, 0, width, height, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, bb);
+            int pixelsBuffer[] = new int[screenshotSize];
+            bb.asIntBuffer().get(pixelsBuffer);
+            bb = null;
+
+            for (int i = 0; i < screenshotSize; ++i) {
+                // The alpha and green channels' positions are preserved while the      red and blue are swapped
+                pixelsBuffer[i] = ((pixelsBuffer[i] & 0xff00ff00)) |    ((pixelsBuffer[i] & 0x000000ff) << 16) | ((pixelsBuffer[i] & 0x00ff0000) >> 16);
+            }
+
+            Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+            bitmap.setPixels(pixelsBuffer, screenshotSize-width, -width, 0, 0, width, height);
+
+            try {
+                FileOutputStream fos = new FileOutputStream(new File(Environment
+                        .getExternalStorageDirectory().toString(), "SCREEN"
+                        + System.currentTimeMillis() + ".png"));
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
+                fos.flush();
+                fos.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            takeScreenshot = false;
+            ARAppStereoRenderer.setTexture(0);
+        }
     }
 
     @Override
@@ -198,14 +237,15 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {// {
         mScreenHeight = i1;
 
         // Setup our screen width and height for normal sprite translation.
-        Matrix.orthoM(mtrxProjection, 0, 0f, mScreenWidth, 0.0f, mScreenHeight, 0, 50);
+        Matrix.orthoM(mtrxProjection, 0, 0f, mScreenWidth, 0.0f, mScreenHeight, 0, 100);
 
         // Set the camera position (View matrix)
-        Matrix.setLookAtM(mtrxView, 0, 0f, 0f, 1f, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
+        Matrix.setLookAtM(mtrxView, 0, 0f, 0f, 0.01f, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
+        Matrix.setLookAtM(mLineView, 0, 0f, 0f, 0.01f, 0.0f, 0f, 0f, 0f, 1.0f, 0.0f);
 
         // Calculate the projection and view transformation
         Matrix.multiplyMM(mtrxProjectionAndView, 0, mtrxProjection, 0, mtrxView, 0);
-
+        Matrix.multiplyMM(mLineProjectionAndView, 0, mtrxProjection, 0, mLineView, 0);
     }
 
     public static ARAppTextureLoader mARAppTextureLoader;

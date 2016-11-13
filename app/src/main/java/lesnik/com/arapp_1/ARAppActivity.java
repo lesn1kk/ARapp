@@ -1,13 +1,16 @@
 package lesnik.com.arapp_1;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Vibrator;
 import android.util.Log;
+import android.view.View;
 
 import com.google.vr.sdk.base.GvrActivity;
 import com.google.zxing.BarcodeFormat;
@@ -19,6 +22,9 @@ import com.google.zxing.ReaderException;
 import com.google.zxing.Result;
 import com.google.zxing.common.HybridBinarizer;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -61,6 +67,10 @@ public class ARAppActivity extends GvrActivity implements IResultHandler, Camera
     @Override
     public void handleResult(Result mResult) {
         Log.e(TAG, mResult.getText());
+
+        if(mResult.getText().equals("sterownik")) {
+            ARAppStereoRenderer.setTexture(R.drawable.sterownik);
+        }
     }
 
     public void turnOnQRCodeScanner() {
@@ -95,7 +105,6 @@ public class ARAppActivity extends GvrActivity implements IResultHandler, Camera
 
         // Turn on speech recognition
         mARAppSpeech.startListening();
-
     }
 
     // I need to handle every frame here, in main activity class, because I need context class to do it
@@ -210,6 +219,25 @@ public class ARAppActivity extends GvrActivity implements IResultHandler, Camera
         ALL_FORMATS.add(BarcodeFormat.QR_CODE);
         ALL_FORMATS.add(BarcodeFormat.DATA_MATRIX);
         ALL_FORMATS.add(BarcodeFormat.PDF_417);
+    }
+
+    public void captureScreen() {
+        View v = getWindow().getDecorView();
+        v.setDrawingCacheEnabled(true);
+        Bitmap bmp = Bitmap.createBitmap(v.getDrawingCache());
+        v.setDrawingCacheEnabled(false);
+        try {
+            FileOutputStream fos = new FileOutputStream(new File(Environment
+                    .getExternalStorageDirectory().toString(), "SCREEN"
+                    + System.currentTimeMillis() + ".png"));
+            bmp.compress(Bitmap.CompressFormat.PNG, 100, fos);
+            fos.flush();
+            fos.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
 

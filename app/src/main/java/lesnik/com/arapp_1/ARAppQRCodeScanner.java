@@ -13,11 +13,11 @@ public class ARAppQRCodeScanner {
     static final int COORDS_PER_VERTEX = 2;
 
     static float lineCoords[] = {   // in counterclockwise order:
-            -1.0f, 0.0f,
-            1.0f, 0.0f,
+            -1.5f, 0.0f,
+            1.5f, 0.0f
     };
 
-    float color[] = {1.0f, 0.0f, 0.0f, 1.0f}; //set line color to red
+    float color[] = {1.0f, 0.0f, 0.0f, 0.3f}; //set line color to red
 
     public ARAppQRCodeScanner() {
         // initialize vertex byte buffer for shape coordinates
@@ -50,19 +50,27 @@ public class ARAppQRCodeScanner {
 
         // creates OpenGL ES program executables
         GLES20.glLinkProgram(mProgram);
+
+        systemTime = System.currentTimeMillis();
     }
 
     private int mPositionHandle;
     private int mColorHandle;
-    private float diff = 0.05f;
+    private float diff = 0.01f;
 
     private final int vertexCount = lineCoords.length / COORDS_PER_VERTEX;
     private final int vertexStride = COORDS_PER_VERTEX * 4; // 4 bytes per vertex
     private int lineProjectionViewParam;
-    private float[] lineMatrix = {0.0f, 0.0f, 0.0f, 0.0f};
-    private int counter;
 
-    public void draw() {
+    // TODO Figure out how it works, the last one is Z I believe
+    private float[] lineMatrix = {0.0f, 0.0f,
+                                  0.0f, 1.0f};
+    private short counter = 0;
+
+    private long systemTime;
+    private long systemTempTime;
+
+    public void draw(float[] m) {
         // Add program to OpenGL ES environment
         GLES20.glUseProgram(mProgram);
 
@@ -85,24 +93,33 @@ public class ARAppQRCodeScanner {
         // Set color for drawing the line
         GLES20.glUniform4fv(mColorHandle, 1, color, 0);
 
+        GLES20.glLineWidth(10.0f);
         // draw the triangle
         GLES20.glDrawArrays(GLES20.GL_LINES, 0, vertexCount);
 
         // Disable vertex array
         GLES20.glDisableVertexAttribArray(mPositionHandle);
 
-        counter++;
-
         //TODO This is temporary solution to see if it works, I need to figure out better way, because this is highly related with phones cpu and gpu power
-        if(counter >= 5) {
-            if (lineMatrix[1] < -1.0f || lineMatrix[1] > 1.0f) {
-                diff = -diff;
+        systemTempTime = System.currentTimeMillis();
+
+        counter++;
+        if(systemTempTime - systemTime >= 30) {
+            // We check if counter is greater than 1 because we need to update the y coord every second time,
+            // because otherwise, the lines wont be synchronized
+            if(counter > 1){
+                if (lineMatrix[1] < -1.0f || lineMatrix[1] > 1.0f) {
+                    diff = -diff;
+                }
+
+                // TODO Figure out why I need only to increment one of the y values ?
+                lineMatrix[1] += diff;
+                //lineMatrix[3] += diff;
+
+                counter = 0;
             }
 
-            lineMatrix[1] += diff;
-            //lineMatrix[3] += diff;
-
-            counter = 0;
+            systemTime = systemTempTime;
         }
     }
 }
