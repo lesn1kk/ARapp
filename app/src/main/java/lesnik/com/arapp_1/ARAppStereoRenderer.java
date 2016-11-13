@@ -176,9 +176,9 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {
             if(!isLoaded) {
                 if(onErrorListening) {
                     if(onErrorListeningNumber != 4) { // 4 means there is no internet connection
-                        mARAppTextureLoader.loadTexture(R.drawable.errorlisteningfour);
-                    } else {
                         mARAppTextureLoader.loadTexture(R.drawable.errorlistening);
+                    } else {
+                        mARAppTextureLoader.loadTexture(R.drawable.errorlisteningfour);
                     }
                 } else {
                     mARAppTextureLoader.loadTexture(texture);
