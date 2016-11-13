@@ -68,9 +68,7 @@ public class ARAppSpeech implements RecognitionListener{
     @Override
     public void onError(int i) {
         Log.e(TAG, "onError " + i);
-        if(i == 4) {
-
-        }
+        ARAppStereoRenderer.onErrorListeningNumber = i;
         ARAppStereoRenderer.onErrorListening = true;
         ARAppStereoRenderer.isLoaded = false;
     }

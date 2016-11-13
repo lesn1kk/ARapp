@@ -191,7 +191,7 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {
 
     public static boolean onErrorListening = false;
     public static boolean takeScreenshot = false;
-    public static short onErrorListeningNumber = 0;
+    public static int onErrorListeningNumber = 0;
 
     public static void setTexture(int id) {
         texture = id;
