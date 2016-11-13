@@ -175,7 +175,11 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {
         if (texture != 0) {
             if(!isLoaded) {
                 if(onErrorListening) {
-                    mARAppTextureLoader.loadTexture(R.drawable.errorlistening);
+                    if(onErrorListeningNumber != 4) { // 4 means there is no internet connection
+                        mARAppTextureLoader.loadTexture(R.drawable.errorlisteningfour);
+                    } else {
+                        mARAppTextureLoader.loadTexture(R.drawable.errorlistening);
+                    }
                 } else {
                     mARAppTextureLoader.loadTexture(texture);
                 }
@@ -187,6 +191,7 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {
 
     public static boolean onErrorListening = false;
     public static boolean takeScreenshot = false;
+    public static short onErrorListeningNumber = 0;
 
     public static void setTexture(int id) {
         texture = id;

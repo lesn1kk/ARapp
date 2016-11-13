@@ -68,6 +68,9 @@ public class ARAppSpeech implements RecognitionListener{
     @Override
     public void onError(int i) {
         Log.e(TAG, "onError " + i);
+        if(i == 4) {
+
+        }
         ARAppStereoRenderer.onErrorListening = true;
         ARAppStereoRenderer.isLoaded = false;
     }
@@ -87,14 +90,6 @@ public class ARAppSpeech implements RecognitionListener{
                         ARAppStereoRenderer.setTexture(R.drawable.scanningmode);
                         break;
                     case "screenshot":
-//                        Process process;
-//                        try {
-//                            process = Runtime.getRuntime().exec("input keyevent 120");
-//                            System.out.println("DID IT WORKED?");
-//                        } catch (IOException e) {
-//                            e.printStackTrace();
-//                        }
-                        ARAppStereoRenderer.setTexture(R.drawable.takingscreenshot);
                         ARAppStereoRenderer.takeScreenshot = true;
                         break;
                     default:
