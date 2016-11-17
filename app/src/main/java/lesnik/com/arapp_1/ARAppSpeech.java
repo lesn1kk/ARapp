@@ -37,16 +37,19 @@ public class ARAppSpeech implements RecognitionListener{
     }
 
     public void startListening() {
+        Log.d(TAG, "startListening");
+
         Intent mIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         mSpeechRecognizer.startListening(mIntent);
-
-        Log.e(TAG, "startListening");
-        ARAppStereoRenderer.onErrorListening = false;
-        ARAppStereoRenderer.setTexture(R.drawable.listening);
     }
 
     @Override
     public void onReadyForSpeech(Bundle bundle) {
+        Log.d(TAG, "onReadyForSpeech");
+
+        ARAppStereoRenderer.onErrorListening = false;
+
+        ARAppStereoRenderer.setTexture(R.drawable.listening);
     }
 
     @Override
@@ -73,28 +76,59 @@ public class ARAppSpeech implements RecognitionListener{
         ARAppStereoRenderer.isLoaded = false;
     }
 
+    private boolean hit;
+
+    private void clearAndHit() {
+        hit = true;
+        ARAppStereoRenderer.setTexture(0);
+    }
+
     @Override
     public void onResults(Bundle bundle) {
-        Log.e(TAG, "onResults");
+        Log.d(TAG, "onResults");
 
+        hit = false;
         ArrayList<String> mResults = bundle.getStringArrayList("results_recognition");
 
         if (mResults != null) {
             for (String m:mResults) {
                 System.out.println(m);
-                switch (m) {
+                switch (m.toLowerCase()) {
                     case "scan":
+                        clearAndHit();
+                        // Clear screen
                         mContext.turnOnQRCodeScanner();
                         ARAppStereoRenderer.setTexture(R.drawable.scanningmode);
                         break;
                     case "screenshot":
+                        // Clear screen
+                        clearAndHit();
                         ARAppStereoRenderer.takeScreenshot = true;
                         break;
+                    case "stop":
+                        // Clear screen
+                        clearAndHit();
+                        mContext.turnOffQRCodeScanner();
+                        break;
+                    case "break":
+                        // Clear screen
+                        clearAndHit();
+                        mContext.turnOffQRCodeScanner();
+                        break;
+                    case "clear":
+                        // Clear screen
+                        clearAndHit();
+                        mContext.turnOffQRCodeScanner();
+                        break;
                     default:
-                        System.out.println("Default case");
+                        Log.d(TAG, "defaultCase");
                         break;
                 }
             }
+        }
+
+        if(!hit) {
+            ARAppStereoRenderer.setTexture(R.drawable.errorcommandnotfound);
         }
     }
 
