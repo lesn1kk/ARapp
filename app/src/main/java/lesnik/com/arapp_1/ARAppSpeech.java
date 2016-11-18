@@ -2,19 +2,12 @@ package lesnik.com.arapp_1;
 
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.os.Environment;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.util.Log;
-import android.view.View;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 
 public class ARAppSpeech implements RecognitionListener{
@@ -32,8 +25,10 @@ public class ARAppSpeech implements RecognitionListener{
         mContext = (ARAppActivity)_mContext;
         mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(mContext);
         mSpeechRecognizer.setRecognitionListener(this);
-        boolean check = SpeechRecognizer.isRecognitionAvailable(mContext);
-        Log.e(TAG, "init " + check);
+
+        // TODO When this check is false, throw an alert. It is necessary!
+        //boolean check = SpeechRecognizer.isRecognitionAvailable(mContext);
+        //Log.e(TAG, "init " + check);
     }
 
     public void startListening() {
@@ -74,20 +69,21 @@ public class ARAppSpeech implements RecognitionListener{
         ARAppStereoRenderer.onErrorListeningNumber = i;
         ARAppStereoRenderer.onErrorListening = true;
         ARAppStereoRenderer.isLoaded = false;
+        ARAppTextureLoader.resetAlpha();
     }
 
-    private boolean hit;
+    private boolean isCommandAvailable;
 
-    private void clearAndHit() {
-        hit = true;
-        ARAppStereoRenderer.setTexture(0);
+    private void setCommandAvailableAndClearTexture() {
+        isCommandAvailable = true;
+        ARAppStereoRenderer.clearTexture();
     }
 
     @Override
     public void onResults(Bundle bundle) {
         Log.d(TAG, "onResults");
 
-        hit = false;
+        isCommandAvailable = false;
         ArrayList<String> mResults = bundle.getStringArrayList("results_recognition");
 
         if (mResults != null) {
@@ -95,30 +91,35 @@ public class ARAppSpeech implements RecognitionListener{
                 System.out.println(m);
                 switch (m.toLowerCase()) {
                     case "scan":
-                        clearAndHit();
+                        setCommandAvailableAndClearTexture();
                         // Clear screen
                         mContext.turnOnQRCodeScanner();
                         ARAppStereoRenderer.setTexture(R.drawable.scanningmode);
                         break;
                     case "screenshot":
                         // Clear screen
-                        clearAndHit();
+                        setCommandAvailableAndClearTexture();
                         ARAppStereoRenderer.takeScreenshot = true;
                         break;
                     case "stop":
                         // Clear screen
-                        clearAndHit();
+                        setCommandAvailableAndClearTexture();
                         mContext.turnOffQRCodeScanner();
                         break;
                     case "break":
                         // Clear screen
-                        clearAndHit();
+                        setCommandAvailableAndClearTexture();
                         mContext.turnOffQRCodeScanner();
                         break;
                     case "clear":
                         // Clear screen
-                        clearAndHit();
+                        setCommandAvailableAndClearTexture();
                         mContext.turnOffQRCodeScanner();
+                        break;
+                    case "blue":
+                        // Clear screen
+                        setCommandAvailableAndClearTexture();
+                        ARAppStereoRenderer.setTexture(R.drawable.blue);
                         break;
                     default:
                         Log.d(TAG, "defaultCase");
@@ -127,7 +128,7 @@ public class ARAppSpeech implements RecognitionListener{
             }
         }
 
-        if(!hit) {
+        if(!isCommandAvailable) {
             ARAppStereoRenderer.setTexture(R.drawable.errorcommandnotfound);
         }
     }

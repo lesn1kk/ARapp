@@ -101,8 +101,11 @@ public class ARAppTextureLoader {
 
     public void loadTexture(int id) {
         // Temporary create a bitmap
-        Bitmap bmp = BitmapFactory.decodeResource(mContext.getResources(), id);
+        BitmapFactory.Options opts = new BitmapFactory.Options();
+        opts.inPreferredConfig = Bitmap.Config.ARGB_8888;
 
+        Bitmap bmp = BitmapFactory.decodeResource(mContext.getResources(), id, opts);
+        bmp.setHasAlpha(true);
         // Bind texture
         GLES20.glActiveTexture(GLES20.GL_TEXTURE1);
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0);
@@ -113,6 +116,12 @@ public class ARAppTextureLoader {
         // We are done using the bitmap so we should recycle it.
         bmp.recycle();
     }
+
+    public static void resetAlpha() {
+        alphaValue = 0.0f;
+    }
+
+    private static float alphaValue = 0.0f;
 
     public void draw(float[] m) {
         GLES20.glUseProgram(mProgram);
@@ -130,6 +139,12 @@ public class ARAppTextureLoader {
 
         mSamplerLoc = GLES20.glGetUniformLocation (mProgram, "s_texture" );
         GLES20.glUniform1i(mSamplerLoc, texture);
+
+        if(alphaValue < 1.0f) {
+            alphaValue += 0.01f;
+        }
+        int mAlphaHandle = GLES20.glGetUniformLocation(mProgram, "alpha");
+        GLES20.glUniform1f(mAlphaHandle, alphaValue);
 
         // Draw the triangle
         GLES20.glDrawElements(GLES20.GL_TRIANGLES, indices.length,

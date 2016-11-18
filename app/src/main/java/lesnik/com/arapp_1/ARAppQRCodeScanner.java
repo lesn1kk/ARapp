@@ -70,7 +70,7 @@ public class ARAppQRCodeScanner {
     private long systemTime;
     private long systemTempTime;
 
-    public void draw(float[] m) {
+    public void draw() {
         // Add program to OpenGL ES environment
         GLES20.glUseProgram(mProgram);
 

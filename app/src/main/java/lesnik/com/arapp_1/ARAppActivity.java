@@ -59,7 +59,7 @@ public class ARAppActivity extends GvrActivity implements IResultHandler, Camera
     @Override
     public void handleResult(Result mResult) {
         Log.e(TAG, mResult.getText());
-        ARAppStereoRenderer.drawLine = false;
+        ARAppStereoRenderer.drawScanningLine = false;
 
         String mResultString = mResult.getText();
 
@@ -82,12 +82,12 @@ public class ARAppActivity extends GvrActivity implements IResultHandler, Camera
     }
 
     public void turnOnQRCodeScanner() {
-        ARAppStereoRenderer.drawLine = true;
+        ARAppStereoRenderer.drawScanningLine = true;
         mResultHandler = this;
     }
 
     public void turnOffQRCodeScanner() {
-        ARAppStereoRenderer.drawLine = false;
+        ARAppStereoRenderer.drawScanningLine = false;
         mResultHandler = null;
     }
 
