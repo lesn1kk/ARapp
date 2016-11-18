@@ -19,48 +19,61 @@ import com.google.zxing.Result;
 import com.google.zxing.common.HybridBinarizer;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.EnumMap;
 import java.util.List;
 
+/**
+ * Main activity class.
+ * Contains logic of QR Code scanner core, because this class is set as camera preview callback.
+ * Implements IResultHandler, interface for handling results of QR Code Scanner.
+ * Implements Camera.PreviewCallback, every new camera's frame is processed here.
+ *
+ * Override:
+ * GvrActivity: onCardboardTrigger
+ * IResultHandler: onHandleResult
+ * Camera.PreviewCallback: onPreviewFrame
+ */
 @SuppressWarnings("deprecation, unchecked")
 public class ARAppActivity extends GvrActivity implements IResultHandler, Camera.PreviewCallback {
 
-    static ARAppStereoRenderer mRenderer;
     private Vibrator mVibrator;
     private MultiFormatReader mMultiFormatReader;
-    static final List<BarcodeFormat> ALL_FORMATS = new ArrayList();
+    private static final List<BarcodeFormat> ALL_FORMATS = new ArrayList();
     private IResultHandler mResultHandler;
     private String TAG = this.getClass().getName();
     private ARAppSpeech mARAppSpeech;
     private ARAppView mARAppView;
 
-    public ARAppView getARAppView() {
-        return mARAppView;
-    }
-
+    /**
+     * Creating main and only activity context of this application. ARAppView is setup here,
+     * created ARAppView instance as contentView, set local renderer instance, setup vibrator,
+     * setup QR code scanner, setup speech recognition.
+     * @param savedInstanceState param
+     */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mARAppView = new ARAppView(this);
-
-        mRenderer = mARAppView.getRenderer();
-        setContentView(mARAppView);
-
+        ARAppView.createInstance(this);
+        mARAppView = ARAppView.getInstance();
         mVibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
         initMultiFormatReader();
 
         mARAppSpeech = ARAppSpeech.getInstance();
         mARAppSpeech.init(this);
+
+        setContentView(mARAppView);
     }
 
+    /**
+     * ARAppActivity is a result handler for QR code scanner, because this is the only activity.
+     * Depending on the result, proper texture is set for drawing, scanner is turned off after.
+     * @param mResult Contains result from decoded QR Code.
+     */
     @Override
     public void handleResult(Result mResult) {
         Log.e(TAG, mResult.getText());
-        ARAppStereoRenderer.drawScanningLine = false;
-
         String mResultString = mResult.getText();
 
         switch(mResultString) {
@@ -79,21 +92,16 @@ public class ARAppActivity extends GvrActivity implements IResultHandler, Camera
             default:
                 break;
         }
+
+        turnOffQRCodeScanner();
     }
 
-    public void turnOnQRCodeScanner() {
-        ARAppStereoRenderer.drawScanningLine = true;
-        mResultHandler = this;
-    }
-
-    public void turnOffQRCodeScanner() {
-        ARAppStereoRenderer.drawScanningLine = false;
-        mResultHandler = null;
-    }
-
+    /**
+     * Android lifecycle. Called when application is backgrounded, or phone is locked.
+     * TODO Implement this correctly.
+     */
     @Override
     public void onPause() {
-        //TODO Handle this properly
         super.onPause();
 
         ARAppCamera.getCamera().stopPreview();
@@ -101,21 +109,29 @@ public class ARAppActivity extends GvrActivity implements IResultHandler, Camera
         System.exit(0);
     }
 
+    /**
+     * Method from GvrActivity class (google vr toolkit). It is called when user push the button
+     * on google cardboard. Used for starting speech recognition service and also to focus
+     * camera every time. Also, always give user a feedback by turning on vibrator for 50ms.
+     */
     @Override
     public void onCardboardTrigger() {
-        Log.i(TAG, "onCardboardTrigger");
+        Log.d(TAG, "onCardboardTrigger");
 
-        // Always give user feedback.
         mVibrator.vibrate(50);
-
-        // Focus to get better image quality and results from QRCodeScanner
         ARAppCamera.focusCamera();
-
-        // Turn on speech recognition
         mARAppSpeech.startListening();
     }
 
-    // I need to handle every frame here, in main activity class, because I need context class to do it
+    /**
+     * Camera.PreviewCallback interface.
+     * Called as preview frames are displayed.
+     * It is inside this class, because it needs a context class to handle it properly.
+     * This class was previously set with setPreviewCallback method.
+     * Contains QR Code Scanner logic.
+     * @param data The contents of the preview frame.
+     * @param camera The Camera service object.
+     */
     @Override
     public void onPreviewFrame(byte[] data, Camera camera) {
         if (this.mResultHandler != null) {
@@ -152,7 +168,7 @@ public class ARAppActivity extends GvrActivity implements IResultHandler, Camera
                     try {
                         mResult = this.mMultiFormatReader.decodeWithState(mBitMap);
                     } catch (ReaderException|NullPointerException|ArrayIndexOutOfBoundsException ex) {
-                        // If we dont find anything, do nothing and continue to scan
+                        // If nothing was found, do nothing and continue to scan
                     } finally {
                         this.mMultiFormatReader.reset();
                     }
@@ -165,7 +181,8 @@ public class ARAppActivity extends GvrActivity implements IResultHandler, Camera
                     handler.post(new Runnable() {
                         public void run() {
                             IResultHandler tmpResultHandler = mResultHandler;
-                            // turn off scanning after finding one
+
+                            // Turn off scanning after finding one
                             turnOffQRCodeScanner();
 
                             if (tmpResultHandler != null) {
@@ -179,11 +196,51 @@ public class ARAppActivity extends GvrActivity implements IResultHandler, Camera
                 Log.e(TAG, ex.toString(), ex);
                 ex.printStackTrace();
             }
-
         }
     }
 
-    public PlanarYUVLuminanceSource buildLuminanceSource(byte[] data, int width, int height) {
+    /**
+     * Method which returns instance of ARAppView class.
+     * @return ARAppView instance
+     */
+    public ARAppView getARAppView() {
+        return mARAppView;
+    }
+
+    /**
+     * Method used to turn on QR Code scanner. It set a static variable drawScanningLine, which is
+     * checked in ARAppStereoRenderer.onDrawEye. Also, set this class as a result handler (this is
+     * value think checked in onPreviewFrame method, which is called when every one camera frame is
+     * captured)
+     * TODO Check if it would be possible to move handling qr scanner results from here.
+     */
+    public void turnOnQRCodeScanner() {
+        ARAppStereoRenderer.drawScanningLine = true;
+        mResultHandler = this;
+    }
+
+    /**
+     * Method used to turn off QR Code scanner. Sets static variable drawScanningLine, which is
+     * checked in ARAppStereoRenderer.onDrawEye. Set mResultHandler to null value (this is first
+     * value checked in onPreviewFrame method, which is called when every one camera frame is
+     * captured)
+     */
+    public void turnOffQRCodeScanner() {
+        ARAppStereoRenderer.drawScanningLine = false;
+        mResultHandler = null;
+    }
+
+    /**
+     * This method is called to cut a rectangle from camera's input to increase performance.
+     * Right now it does absolutely nothing useful and performance is still ok.
+     * @param data Contents of image
+     * @param width Width of rectangle
+     * @param height Height of rectangle
+     * @return PlanarYUVLuminanceSource, whatever it is
+     * TODO Figure out if it is even needed
+     * TODO What does PlanarYUVLuminanceSource do?
+     */
+    private PlanarYUVLuminanceSource buildLuminanceSource(byte[] data, int width, int height) {
         //TODO draw a square or rect on view and tell user to hold qrcode inside of it, then get its coordinates, width and height
 //        Rect rect = this.getFramingRectInPreview(width, height);
 //        if(rect == null) {
@@ -202,17 +259,19 @@ public class ARAppActivity extends GvrActivity implements IResultHandler, Camera
         // }
     }
 
+    /**
+     * Initialize QR Code possible formats. Called in onCreate.
+     */
     private void initMultiFormatReader() {
         EnumMap hints = new EnumMap(DecodeHintType.class);
-        hints.put(DecodeHintType.POSSIBLE_FORMATS, this.getFormats());
+        hints.put(DecodeHintType.POSSIBLE_FORMATS, ALL_FORMATS);
         this.mMultiFormatReader = new MultiFormatReader();
         this.mMultiFormatReader.setHints(hints);
     }
 
-    public Collection<BarcodeFormat> getFormats() {
-        return ALL_FORMATS;
-    }
-
+    /**
+     * Fill array with possible QR Code formats. Used in initMultiFormatReader.
+     */
     static {
         ALL_FORMATS.add(BarcodeFormat.UPC_A);
         ALL_FORMATS.add(BarcodeFormat.UPC_E);

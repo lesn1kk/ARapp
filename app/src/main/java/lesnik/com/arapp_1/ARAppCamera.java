@@ -121,7 +121,7 @@ public class ARAppCamera {
 
     public void startCamera(int texture) {
         SurfaceTexture surface = new SurfaceTexture(texture);
-        mRenderer = mContext.getARAppView().getRenderer();
+        mRenderer = ARAppView.getRenderer();
         mRenderer.setSurface(surface);
 
         mCamera = Camera.open();
