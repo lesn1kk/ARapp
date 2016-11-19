@@ -38,6 +38,11 @@ import java.util.List;
 class ARAppActivity extends GvrActivity implements IResultHandler, Camera.PreviewCallback {
 
     /**
+     * Application context available for all packages by calling getter method.
+     */
+    private static ARAppActivity mContext;
+
+    /**
      * Should be initialized with application. Responsible for vibrator hardware.
      */
     private Vibrator mVibrator;
@@ -77,6 +82,8 @@ class ARAppActivity extends GvrActivity implements IResultHandler, Camera.Previe
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        mContext = this;
 
         ARAppView.createInstance(this);
         mVibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
@@ -223,6 +230,15 @@ class ARAppActivity extends GvrActivity implements IResultHandler, Camera.Previe
                 ex.printStackTrace();
             }
         }
+    }
+
+    /**
+     * Returns this application context.
+     *
+     * @return Main application context.
+     */
+    public static ARAppActivity getARAppContext() {
+        return mContext;
     }
 
     /**

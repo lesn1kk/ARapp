@@ -254,25 +254,21 @@ final class ARAppStereoRenderer implements GvrView.StereoRenderer {
      * OpenGL ES 2.0 GvrView.StereoRenderer
      *
      * This is called when OpenGL context is created, only once. Good place to setup all of used
-     * classes.
+     * classes. Set local instances of ARAppCamera and ARAppTextureLoader to have access to their
+     * draw methods.
      *
      * @param eglConfig Unused
      */
     @Override
     public void onSurfaceCreated(javax.microedition.khronos.egl.EGLConfig eglConfig) {
-        //TODO Implement singleton instances
-        mARAppCamera = new ARAppCamera(mContext);
-
-        //int camTexture = mARAppCamera.getTexture();
+        ARAppCamera.createInstance();
+        mARAppCamera = ARAppCamera.getInstance();
+        mARAppCamera.startCamera();
 
         mScanningLine = new ARAppQRCodeScanner();
 
-        //surface = new SurfaceTexture(camTexture);
-        mARAppCamera.startCamera();
-
-        //TODO Move this code out of here
-        mARAppTextureLoader = new ARAppTextureLoader(mContext);
-        mARAppTextureLoader.setup();
+        ARAppTextureLoader.createInstance();
+        mARAppTextureLoader = ARAppTextureLoader.getInstance();
     }
 
     /**

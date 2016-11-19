@@ -1,6 +1,5 @@
 package lesnik.com.arapp_1;
 
-import android.content.Context;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.opengl.GLES11Ext;
@@ -14,7 +13,10 @@ import java.nio.FloatBuffer;
 
 import javax.microedition.khronos.opengles.GL10;
 
-@SuppressWarnings("FieldCanBeLocal")
+/**
+ * Class responsible for setting up camera's hardware and drawing its input on screen.
+ */
+@SuppressWarnings("FieldCanBeLocal, deprecation")
 final class ARAppCamera {
 
     /**
@@ -29,6 +31,11 @@ final class ARAppCamera {
     private static Camera mCamera;
 
     /**
+     * Instance of this class. Singleton.
+     */
+    private static ARAppCamera mARAppCamera;
+
+    /**
      * OpenGL ES 2.0
      * Buffers used by OpenGL program.
      */
@@ -39,13 +46,6 @@ final class ARAppCamera {
      * OpenGL program.
      */
     private final int mProgram;
-
-    /**
-     * OpenGL ES 2.0
-     * Local copy of main activity context.
-     */
-    private ARAppActivity mContext;
-
 
     /**
      * OpenGL ES 2.0
@@ -87,7 +87,6 @@ final class ARAppCamera {
             0.0F, 1.0F,
             0.0F, 0.0F};
 
-    // number of coordinates per vertex in this array
     /**
      * OpenGL ES 2.0
      * Number of coordinates per vertex in above arrays.
@@ -107,11 +106,21 @@ final class ARAppCamera {
      */
     private int mTexture;
 
+    /**
+     * Method used to create a proper texture for OpenGL.
+     * glGenTextures - OpenGL generate its own texture id.
+     * glBindTexture - bind this texture to some OpenGL texture, in this case to
+     * GL_TEXTURE_EXTERNAL_OS
+     * glTexParameterf - set texture parameters. f means float, i means integer.
+     * https://www.khronos.org/opengles/sdk/docs/man/xhtml/glTexParameter.xml
+     *
+     * @return id of generated texture
+     * TODO Check if setting these parameters is necessary
+     */
     private int createTexture() {
         int[] texture = new int[1];
 
         GLES20.glGenTextures(1, texture, 0);
-        GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, texture[0]);
         GLES20.glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
                 GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_LINEAR);
         GLES20.glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
@@ -124,8 +133,15 @@ final class ARAppCamera {
         return texture[0];
     }
 
-    public ARAppCamera(Context context) {
-        mContext = (ARAppActivity) context;
+    /**
+     * Constructor. Prepares OpenGL program by creating buffers with screen and texture vertices.
+     * Creates empty OpenGL ES program.
+     * Loads shaders to OpenGL and adds them to this class program. glLinkProgram is called to
+     * make possible communication between vertex and fragment shaders.
+     *
+     * TODO Explain why ByteBuffer
+     */
+    private ARAppCamera() {
         mTexture = createTexture();
 
         ByteBuffer bb = ByteBuffer.allocateDirect(screenVert.length * 4);
@@ -145,13 +161,42 @@ final class ARAppCamera {
         int fragmentShader = ARAppStereoRenderer.loadShader(GLES20.GL_FRAGMENT_SHADER,
                 R.raw.cam_fragment);
 
-        mProgram = GLES20.glCreateProgram();             // create empty OpenGL ES Program
-        GLES20.glAttachShader(mProgram, vertexShader);   // add the vertex shader to program
-        GLES20.glAttachShader(mProgram, fragmentShader); // add the fragment shader to program
+        mProgram = GLES20.glCreateProgram();
+        GLES20.glAttachShader(mProgram, vertexShader);
+        GLES20.glAttachShader(mProgram, fragmentShader);
         GLES20.glLinkProgram(mProgram);
     }
 
-    public void draw() {
+    /**
+     * Creates instance of this class. Singleton.
+     */
+    static void createInstance() {
+        mARAppCamera = new ARAppCamera();
+    }
+    /**
+     * Returns instance of this class. Singleton.
+     *
+     * @return Instance of this class.
+     */
+    static ARAppCamera getInstance() {
+        return mARAppCamera;
+    }
+
+    /**
+     * Draws camera's input on the screen. Called every time in onEyeDraw OpenGL method.
+     * glUseProgram - tell OpenGL what program it must use.
+     * glActiveTexture - tell OpenGl to what texture we will bind. Must be unique, in case
+     * when we would want to draw a second texture, we must use other, for example GL_TEXTURE1
+     * glBindTexture - bind our texture to OpenGL texture.
+     * glGetAttribLocation - pointer to variable in OpenGL shader.
+     * glEnableVertexAtribArray - tell OpenGl that we want this attribute to be used during
+     * rendering.
+     * glVertexAttribPointer - set its value
+     * glDrawArrays - draw everything
+     * glDisableVertexAttribArray - disable it. Good practice to disable any modified property
+     * of OpenGL after operation is complete.
+     */
+    void draw() {
         GLES20.glUseProgram(mProgram);
 
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
@@ -159,22 +204,29 @@ final class ARAppCamera {
 
         mPositionHandle = GLES20.glGetAttribLocation(mProgram, "position");
         GLES20.glEnableVertexAttribArray(mPositionHandle);
-        GLES20.glVertexAttribPointer(mPositionHandle, COORDS_PER_VERTEX, GLES20.GL_FLOAT, true,
-                vertexStride, screenVerticesBuffer);
+        GLES20.glVertexAttribPointer(mPositionHandle, COORDS_PER_VERTEX,
+                GLES20.GL_FLOAT, true, vertexStride, screenVerticesBuffer);
 
         mTextureCoordsHandle = GLES20.glGetAttribLocation(mProgram, "inputTextureCoordinate");
         GLES20.glEnableVertexAttribArray(mTextureCoordsHandle);
-        GLES20.glVertexAttribPointer(mTextureCoordsHandle, COORDS_PER_VERTEX, GLES20.GL_FLOAT, false,
-                vertexStride, textVerticesBuffer);
+        GLES20.glVertexAttribPointer(mTextureCoordsHandle, COORDS_PER_VERTEX,
+                GLES20.GL_FLOAT, false, vertexStride, textVerticesBuffer);
 
         GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 6);
 
-        // Disable vertex array
         GLES20.glDisableVertexAttribArray(mPositionHandle);
         GLES20.glDisableVertexAttribArray(mTextureCoordsHandle);
     }
 
-    public void startCamera() {
+    /**
+     * Method called from onSurfaceCreated. Sets proper surface to camera, sets ARAppActivity
+     * class as a preview callback, sets camera's autofocus to continuous mode and sets size
+     * of images.
+     * TODO Consider not turning continuous mode but focus on voice command, because in
+     * better devices, this could be not comfortable for user. Also, consider turning on
+     * constant fps.
+     */
+    void startCamera() {
         SurfaceTexture surface = new SurfaceTexture(mTexture);
         ARAppStereoRenderer.getInstance().setSurface(surface);
 
@@ -182,7 +234,7 @@ final class ARAppCamera {
 
         try {
             mCamera.setPreviewTexture(surface);
-            mCamera.setPreviewCallback(mContext);
+            mCamera.setPreviewCallback(ARAppActivity.getARAppContext());
             //set camera to continually auto-focus
             Camera.Parameters params = mCamera.getParameters();
             //*EDIT*//params.setFocusMode("continuous-picture");
@@ -206,11 +258,19 @@ final class ARAppCamera {
         }
     }
 
-    public static Camera getCamera() {
+    /**
+     * Returns camera object. Used in onPause to stop and release.
+     *
+     * @return Camera's instance.
+     */
+    static Camera getCamera() {
         return mCamera;
     }
 
-    public static void focusCamera() {
+    /**
+     * Focus camera's captured images.
+     */
+    static void focusCamera() {
         if (mCamera != null) {
             try {
                 mCamera.cancelAutoFocus();

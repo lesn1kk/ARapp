@@ -20,13 +20,22 @@ public final class ARAppTextureLoader {
     public ShortBuffer drawListBuffer;
     public FloatBuffer uvBuffer;
 
-    private Context mContext;
     private int mProgram;
     private int vertexShader, fragmentShader;
     private int mPositionHandle, mTexCoordLoc, mMtrxHandle, mSamplerLoc;
 
-    public ARAppTextureLoader(Context context) {
-        mContext = context;
+    private static ARAppTextureLoader mARAppTextureLoader;
+
+    public ARAppTextureLoader() {
+        setup();
+    }
+
+    public static void createInstance() {
+        mARAppTextureLoader = new ARAppTextureLoader();
+    }
+
+    public static ARAppTextureLoader getInstance() {
+        return mARAppTextureLoader;
     }
 
     public void setup() {
@@ -113,7 +122,8 @@ public final class ARAppTextureLoader {
             return false;
         }
 
-        Bitmap bmp = BitmapFactory.decodeResource(mContext.getResources(), id);
+        Bitmap bmp =
+                BitmapFactory.decodeResource(ARAppActivity.getARAppContext().getResources(), id);
         //bmp.setHasAlpha(true);
         // Bind texture
         GLES20.glActiveTexture(GLES20.GL_TEXTURE1);
