@@ -26,7 +26,7 @@ import java.nio.ByteOrder;
  * Class implementing GvrView.StereoRenderer, wrapped OpenGL ES 2.0 from google virtual kit library.
  * It is responsible for setting OpenGL context, setting up the program and drawing everything.
  */
-public class ARAppStereoRenderer implements GvrView.StereoRenderer {
+final class ARAppStereoRenderer implements GvrView.StereoRenderer {
     // These matrices are used to properly draw a texture
     private final float[] mtrxProjection = new float[16];
     private final float[] mtrxView = new float[16];
@@ -44,7 +44,7 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {
     private static ARAppStereoRenderer mRenderer;
     private static ARAppTextureLoader mARAppTextureLoader;
 
-    private static String TAG = "MyGL20Renderer";
+    private static final String mTag = "ARAppStereoRenderer";
     private static final float CAMERA_Z = 0.01f;
 
     public static boolean drawScanningLine = false;
@@ -57,11 +57,11 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {
 
     /**
      * A private constructor to create only one instance.
-     * @param _mContext Context of the main activity, used for loading resources and also
+     * @param context Context of the main activity, used for loading resources and also
      *                  creating instance of ARAppCamera class.
      */
-    private ARAppStereoRenderer(Context _mContext) {
-        mContext = (ARAppActivity)_mContext;
+    private ARAppStereoRenderer(Context context) {
+        mContext = (ARAppActivity) context;
 
         camera = new float[16];
         view = new float[16];
@@ -69,18 +69,18 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {
 
     /**
      * A public method to create a singleton instance of this class.
-     * @param _mContext Context of the main activity, used for loading resources and also
+     * @param context Context of the main activity, used for loading resources and also
      *                  creating instance of ARAppCamera class.
      */
-    public static void createInstance(Context _mContext) {
-        mRenderer = new ARAppStereoRenderer(_mContext);
+    static void createInstance(Context context) {
+        mRenderer = new ARAppStereoRenderer(context);
     }
 
     /**
      * A method used to get instance of this class.
      * @return Returns this instance.
      */
-    public static ARAppStereoRenderer getInstance() {
+    static ARAppStereoRenderer getInstance() {
         return mRenderer;
     }
 
@@ -88,7 +88,7 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {
      * A method used to set surface which we will use to draw camera's input stream.
      * @param _surface Surface used by ARAppCamera class.
      */
-    public void setSurface(SurfaceTexture _surface) {
+    void setSurface(SurfaceTexture _surface) {
         surface = _surface;
     }
 
@@ -100,17 +100,18 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {
      *
      * @param id An id of that should be drawn.
      */
-    public static void setTexture(int id) {
+    static void setTexture(int id) {
         ARAppTextureLoader.resetAlpha();
         texture = id;
         isLoaded = false;
     }
 
     /**
-     * Method used to clear screen by setting actual texture to 0;
+     * Method used to clear screen by setting actual texture to 0.
      */
-    public static void clearTexture() {
+    static void clearTexture() {
         texture = 0;
+        isLoaded = false;
     }
     /**
      * OpenGL ES 2.0 GvrView.StereoRenderer
@@ -151,28 +152,30 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {
         // Draw camera's input
         mARAppCamera.draw();
 
-        if(drawScanningLine) {
+        if (drawScanningLine) {
             mScanningLine.draw();
         }
 
-        // For now, draw only one texture at once, should be enough
-        if (texture != 0) {
-            if(!isLoaded) {
-                if(onErrorListening) {
-                    if(onErrorListeningNumber != 4) { // 4 means there is no internet connection
-                        mARAppTextureLoader.loadTexture(R.drawable.errorlistening);
-                    } else {
-                        mARAppTextureLoader.loadTexture(R.drawable.errorlisteningfour);
-                    }
-                } else {
-                    mARAppTextureLoader.loadTexture(texture);
-                }
-                isLoaded = true;
-            }
+        if (!isLoaded) {
+            checkError();
+            isLoaded = mARAppTextureLoader.loadTexture(texture);
+        } else {
             mARAppTextureLoader.draw(mtrxProjectionAndView);
         }
     }
 
+    /**
+     * Method that checks if speech recognition throws error. Error 4 means no internet connection.
+     */
+    private void checkError() {
+        if (onErrorListening) {
+            if (onErrorListeningNumber != 4) { // 4 means there is no internet connection
+                texture = R.drawable.errorlistening;
+            } else {
+                texture = R.drawable.errorlisteningfour;
+            }
+        }
+    }
     /**
      * OpenGL ES 2.0 GvrView.StereoRenderer
      *
@@ -195,16 +198,19 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {
             bb.order(ByteOrder.nativeOrder());
             GLES20.glReadPixels(0, 0, width, height, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, bb);
 
-            int pixelsBuffer[] = new int[screenshotSize];
+            int[] pixelsBuffer = new int[screenshotSize];
             bb.asIntBuffer().get(pixelsBuffer);
 
             for (int i = 0; i < screenshotSize; ++i) {
-                // The alpha and green channels' positions are preserved while the      red and blue are swapped
-                pixelsBuffer[i] = ((pixelsBuffer[i] & 0xff00ff00)) |    ((pixelsBuffer[i] & 0x000000ff) << 16) | ((pixelsBuffer[i] & 0x00ff0000) >> 16);
+                // The alpha and green channels' positions are preserved while the
+                // red and blue are swapped
+                pixelsBuffer[i] = ((pixelsBuffer[i] & 0xff00ff00))
+                        | ((pixelsBuffer[i] & 0x000000ff) << 16)
+                        | ((pixelsBuffer[i] & 0x00ff0000) >> 16);
             }
 
             Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-            bitmap.setPixels(pixelsBuffer, screenshotSize-width, -width, 0, 0, width, height);
+            bitmap.setPixels(pixelsBuffer, screenshotSize - width, -width, 0, 0, width, height);
 
             try {
                 FileOutputStream fos = new FileOutputStream(new File(Environment
@@ -257,12 +263,12 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {
         //TODO Implement singleton instances
         mARAppCamera = new ARAppCamera(mContext);
 
-        int texture = mARAppCamera.getTexture();
+        //int camTexture = mARAppCamera.getTexture();
 
         mScanningLine = new ARAppQRCodeScanner();
 
-        surface = new SurfaceTexture(texture);
-        mARAppCamera.startCamera(texture);
+        //surface = new SurfaceTexture(camTexture);
+        mARAppCamera.startCamera();
 
         //TODO Move this code out of here
         mARAppTextureLoader = new ARAppTextureLoader(mContext);
@@ -324,7 +330,7 @@ public class ARAppStereoRenderer implements GvrView.StereoRenderer {
 
         // If the compilation failed, delete the shader.
         if (compileStatus[0] == 0) {
-            Log.e(TAG, "Error compiling shader: " + GLES20.glGetShaderInfoLog(shader));
+            Log.e(mTag, "Error compiling shader: " + GLES20.glGetShaderInfoLog(shader));
             GLES20.glDeleteShader(shader);
             shader = 0;
         }

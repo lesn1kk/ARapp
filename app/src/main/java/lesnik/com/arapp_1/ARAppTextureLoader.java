@@ -12,10 +12,10 @@ import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
 @SuppressWarnings("FieldCanBeLocal")
-public class ARAppTextureLoader {
-    public static float vertices[];
-    public static short indices[];
-    public static float uvs[];
+public final class ARAppTextureLoader {
+    public static float[] vertices;
+    public static short[] indices;
+    public static float[] uvs;
     public FloatBuffer vertexBuffer;
     public ShortBuffer drawListBuffer;
     public FloatBuffer uvBuffer;
@@ -25,20 +25,19 @@ public class ARAppTextureLoader {
     private int vertexShader, fragmentShader;
     private int mPositionHandle, mTexCoordLoc, mMtrxHandle, mSamplerLoc;
 
-    public ARAppTextureLoader(Context mContext) {
-        this.mContext = mContext;
+    public ARAppTextureLoader(Context context) {
+        mContext = context;
     }
 
     public void setup() {
         texture = createTexture();
 
         // We have to create the vertices of our triangle. This is actually size.
-        vertices = new float[]
-                {       0.0f, 480f, 0.0f,
-                        0.0f, 0.0f, 0.0f,
-                        640f, 0.0f, 0.0f,
-                        640f, 480f, 0.0f,
-                };
+        vertices = new float[] {
+                0.0f, 480f, 0.0f,
+                0.0f, 0.0f, 0.0f,
+                640f, 0.0f, 0.0f,
+                640f, 480f, 0.0f};
 
         // Create our UV coordinates.
         uvs = new float[] {
@@ -75,8 +74,10 @@ public class ARAppTextureLoader {
         GLES20.glEnable(GLES20.GL_BLEND);
         GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA);
 
-        vertexShader = ARAppStereoRenderer.loadShader(GLES20.GL_VERTEX_SHADER, R.raw.texture_vertex);
-        fragmentShader = ARAppStereoRenderer.loadShader(GLES20.GL_FRAGMENT_SHADER, R.raw.texture_fragment);
+        vertexShader = ARAppStereoRenderer.loadShader(GLES20.GL_VERTEX_SHADER,
+                R.raw.texture_vertex);
+        fragmentShader = ARAppStereoRenderer.loadShader(GLES20.GL_FRAGMENT_SHADER,
+                R.raw.texture_fragment);
 
         mProgram = GLES20.glCreateProgram();             // create empty OpenGL ES Program
         GLES20.glAttachShader(mProgram, vertexShader);   // add the vertex shader to program
@@ -87,25 +88,33 @@ public class ARAppTextureLoader {
     private int texture;
 
     public int createTexture() {
-        int [] textureArray = new int[1];
+        int[] textureArray = new int[1];
         GLES20.glGenTextures(1, textureArray, 0);
 
         // Set filtering
-        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
-        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST);
-        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
-        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER,
+                GLES20.GL_NEAREST);
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER,
+                GLES20.GL_NEAREST);
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S,
+                GLES20.GL_CLAMP_TO_EDGE);
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T,
+                GLES20.GL_CLAMP_TO_EDGE);
 
         return textureArray[0];
     }
 
-    public void loadTexture(int id) {
+    public boolean loadTexture(int id) {
         // Temporary create a bitmap
-        BitmapFactory.Options opts = new BitmapFactory.Options();
-        opts.inPreferredConfig = Bitmap.Config.ARGB_8888;
+        //BitmapFactory.Options opts = new BitmapFactory.Options();
+        //opts.inPreferredConfig = Bitmap.Config.ARGB_8888;
 
-        Bitmap bmp = BitmapFactory.decodeResource(mContext.getResources(), id, opts);
-        bmp.setHasAlpha(true);
+        if (id == 0) {
+            return false;
+        }
+
+        Bitmap bmp = BitmapFactory.decodeResource(mContext.getResources(), id);
+        //bmp.setHasAlpha(true);
         // Bind texture
         GLES20.glActiveTexture(GLES20.GL_TEXTURE1);
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0);
@@ -115,6 +124,7 @@ public class ARAppTextureLoader {
 
         // We are done using the bitmap so we should recycle it.
         bmp.recycle();
+        return true;
     }
 
     public static void resetAlpha() {
@@ -130,17 +140,17 @@ public class ARAppTextureLoader {
         GLES20.glEnableVertexAttribArray(mPositionHandle);
         GLES20.glVertexAttribPointer(mPositionHandle, 3, GLES20.GL_FLOAT, false, 0, vertexBuffer);
 
-        mTexCoordLoc = GLES20.glGetAttribLocation(mProgram, "a_texCoord" );
-        GLES20.glEnableVertexAttribArray (mTexCoordLoc);
-        GLES20.glVertexAttribPointer (mTexCoordLoc, 2, GLES20.GL_FLOAT, false, 0, uvBuffer);
+        mTexCoordLoc = GLES20.glGetAttribLocation(mProgram, "a_texCoord");
+        GLES20.glEnableVertexAttribArray(mTexCoordLoc);
+        GLES20.glVertexAttribPointer(mTexCoordLoc, 2, GLES20.GL_FLOAT, false, 0, uvBuffer);
 
         mMtrxHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix");
         GLES20.glUniformMatrix4fv(mMtrxHandle, 1, false, m, 0);
 
-        mSamplerLoc = GLES20.glGetUniformLocation (mProgram, "s_texture" );
+        mSamplerLoc = GLES20.glGetUniformLocation(mProgram, "s_texture");
         GLES20.glUniform1i(mSamplerLoc, texture);
 
-        if(alphaValue < 1.0f) {
+        if (alphaValue < 1.0f) {
             alphaValue += 0.01f;
         }
         int mAlphaHandle = GLES20.glGetUniformLocation(mProgram, "alpha");

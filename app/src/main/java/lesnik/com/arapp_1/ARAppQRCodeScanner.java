@@ -6,18 +6,18 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
-public class ARAppQRCodeScanner {
+final class ARAppQRCodeScanner {
     private final int mProgram;
     private FloatBuffer vertexBuffer;
 
     static final int COORDS_PER_VERTEX = 2;
 
-    static float lineCoords[] = {   // in counterclockwise order:
+    private static float[] lineCoords = {// in counterclockwise order:
             -1.5f, 0.0f,
             1.5f, 0.0f
     };
 
-    float color[] = {1.0f, 0.0f, 0.0f, 0.3f}; //set line color to red
+    private float[] color = {1.0f, 0.0f, 0.0f, 0.3f}; //set line color to red
 
     public ARAppQRCodeScanner() {
         // initialize vertex byte buffer for shape coordinates
@@ -100,14 +100,14 @@ public class ARAppQRCodeScanner {
         // Disable vertex array
         GLES20.glDisableVertexAttribArray(mPositionHandle);
 
-        //TODO This is temporary solution to see if it works, I need to figure out better way, because this is highly related with phones cpu and gpu power
+        //TODO This is temporary solution to see if it works, I need to figure out better way,
+        // because this is highly related with phones cpu and gpu power
         systemTempTime = System.currentTimeMillis();
 
-        counter++;
-        if(systemTempTime - systemTime >= 30) {
-            // We check if counter is greater than 1 because we need to update the y coord every second time,
-            // because otherwise, the lines wont be synchronized
-            if(counter > 1){
+        if (systemTempTime - systemTime >= 30) {
+            // We check if counter is greater than 1 because we need to update the y coord
+            // every second time, because otherwise, the lines wont be synchronized
+            if (counter > 1) {
                 if (lineMatrix[1] < -1.0f || lineMatrix[1] > 1.0f) {
                     diff = -diff;
                 }
@@ -115,8 +115,6 @@ public class ARAppQRCodeScanner {
                 // TODO Figure out why I need only to increment one of the y values ?
                 lineMatrix[1] += diff;
                 //lineMatrix[3] += diff;
-
-                counter = 0;
             }
 
             systemTime = systemTempTime;

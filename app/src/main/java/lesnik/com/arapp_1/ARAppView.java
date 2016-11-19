@@ -28,9 +28,5 @@ class ARAppView extends GvrView {
     public static ARAppView getInstance() {
         return mARAppView;
     }
-
-    public static ARAppStereoRenderer getRenderer() {
-        return mARAppRenderer;
-    }
 }
 

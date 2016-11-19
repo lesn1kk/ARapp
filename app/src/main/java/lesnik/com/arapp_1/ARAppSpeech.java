@@ -10,29 +10,28 @@ import android.util.Log;
 
 import java.util.ArrayList;
 
-public class ARAppSpeech implements RecognitionListener{
+final class ARAppSpeech implements RecognitionListener {
     //singleton
     private static final ARAppSpeech mARAppSpeech = new ARAppSpeech();
     private SpeechRecognizer mSpeechRecognizer;
-    private String TAG = this.getClass().getName();
+    private final String mTag = this.getClass().getName();
     private ARAppActivity mContext;
 
     public static ARAppSpeech getInstance() {
         return mARAppSpeech;
     }
 
-    public void init(Context _mContext) {
-        mContext = (ARAppActivity)_mContext;
+    public void init(Context context) {
+        mContext = (ARAppActivity) context;
         mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(mContext);
         mSpeechRecognizer.setRecognitionListener(this);
 
         // TODO When this check is false, throw an alert. It is necessary!
         //boolean check = SpeechRecognizer.isRecognitionAvailable(mContext);
-        //Log.e(TAG, "init " + check);
     }
 
     public void startListening() {
-        Log.d(TAG, "startListening");
+        Log.d(mTag, "startListening");
 
         Intent mIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         mSpeechRecognizer.startListening(mIntent);
@@ -40,7 +39,7 @@ public class ARAppSpeech implements RecognitionListener{
 
     @Override
     public void onReadyForSpeech(Bundle bundle) {
-        Log.d(TAG, "onReadyForSpeech");
+        Log.d(mTag, "onReadyForSpeech");
 
         ARAppStereoRenderer.onErrorListening = false;
 
@@ -65,10 +64,10 @@ public class ARAppSpeech implements RecognitionListener{
 
     @Override
     public void onError(int i) {
-        Log.e(TAG, "onError " + i);
+        Log.e(mTag, "onError " + i);
         ARAppStereoRenderer.onErrorListeningNumber = i;
         ARAppStereoRenderer.onErrorListening = true;
-        ARAppStereoRenderer.isLoaded = false;
+        ARAppStereoRenderer.clearTexture();
         ARAppTextureLoader.resetAlpha();
     }
 
@@ -81,7 +80,7 @@ public class ARAppSpeech implements RecognitionListener{
 
     @Override
     public void onResults(Bundle bundle) {
-        Log.d(TAG, "onResults");
+        Log.d(mTag, "onResults");
 
         isCommandAvailable = false;
         ArrayList<String> mResults = bundle.getStringArrayList("results_recognition");
@@ -91,8 +90,8 @@ public class ARAppSpeech implements RecognitionListener{
                 System.out.println(m);
                 switch (m.toLowerCase()) {
                     case "scan":
-                        setCommandAvailableAndClearTexture();
                         // Clear screen
+                        setCommandAvailableAndClearTexture();
                         mContext.turnOnQRCodeScanner();
                         ARAppStereoRenderer.setTexture(R.drawable.scanningmode);
                         break;
@@ -122,13 +121,13 @@ public class ARAppSpeech implements RecognitionListener{
                         ARAppStereoRenderer.setTexture(R.drawable.blue);
                         break;
                     default:
-                        Log.d(TAG, "defaultCase");
+                        Log.d(mTag, "defaultCase");
                         break;
                 }
             }
         }
 
-        if(!isCommandAvailable) {
+        if (!isCommandAvailable) {
             ARAppStereoRenderer.setTexture(R.drawable.errorcommandnotfound);
         }
     }

@@ -32,17 +32,41 @@ import java.util.List;
  * GvrActivity: onCardboardTrigger
  * IResultHandler: onHandleResult
  * Camera.PreviewCallback: onPreviewFrame
+ * TODO Consider creating static method that return this context.
  */
 @SuppressWarnings("deprecation, unchecked")
-public class ARAppActivity extends GvrActivity implements IResultHandler, Camera.PreviewCallback {
+class ARAppActivity extends GvrActivity implements IResultHandler, Camera.PreviewCallback {
 
+    /**
+     * Should be initialized with application. Responsible for vibrator hardware.
+     */
     private Vibrator mVibrator;
+
+    /**
+     * Holds information about available QR Code formats. Should be initialized with application.
+     */
     private MultiFormatReader mMultiFormatReader;
+
+    /**
+     * List of possible QR Code formats. Used in initMultiFormatReader() method.
+     */
     private static final List<BarcodeFormat> ALL_FORMATS = new ArrayList();
+
+    /**
+     * Pointer to the context class that will handle results from QR Code Scanner.
+     */
     private IResultHandler mResultHandler;
-    private String TAG = this.getClass().getName();
+
+    /**
+     * Class TAG. Used in logs.
+     */
+    private String mTag = this.getClass().getName();
+
+    /**
+     * Local instance of speech recognition service. Used to initialize recognition service when
+     * application starts.
+     */
     private ARAppSpeech mARAppSpeech;
-    private ARAppView mARAppView;
 
     /**
      * Creating main and only activity context of this application. ARAppView is setup here,
@@ -55,7 +79,6 @@ public class ARAppActivity extends GvrActivity implements IResultHandler, Camera
         super.onCreate(savedInstanceState);
 
         ARAppView.createInstance(this);
-        mARAppView = ARAppView.getInstance();
         mVibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
         initMultiFormatReader();
@@ -63,7 +86,7 @@ public class ARAppActivity extends GvrActivity implements IResultHandler, Camera
         mARAppSpeech = ARAppSpeech.getInstance();
         mARAppSpeech.init(this);
 
-        setContentView(mARAppView);
+        setContentView(ARAppView.getInstance());
     }
 
     /**
@@ -73,10 +96,11 @@ public class ARAppActivity extends GvrActivity implements IResultHandler, Camera
      */
     @Override
     public void handleResult(Result mResult) {
-        Log.e(TAG, mResult.getText());
         String mResultString = mResult.getText();
 
-        switch(mResultString) {
+        Log.e(mTag, mResultString);
+
+        switch (mResultString) {
             case "zielony":
                 ARAppStereoRenderer.setTexture(R.drawable.green);
                 break;
@@ -116,7 +140,7 @@ public class ARAppActivity extends GvrActivity implements IResultHandler, Camera
      */
     @Override
     public void onCardboardTrigger() {
-        Log.d(TAG, "onCardboardTrigger");
+        Log.d(mTag, "onCardboardTrigger");
 
         mVibrator.vibrate(50);
         ARAppCamera.focusCamera();
@@ -153,7 +177,8 @@ public class ARAppActivity extends GvrActivity implements IResultHandler, Camera
                     }
 
                     for (int finalRawResult = 0; finalRawResult < width; ++finalRawResult) {
-                        rawResult[finalRawResult * height + height - source - 1] = data[finalRawResult + source * width];
+                        rawResult[finalRawResult * height + height - source - 1] =
+                        data[finalRawResult + source * width];
                     }
 
                     ++source;
@@ -167,7 +192,8 @@ public class ARAppActivity extends GvrActivity implements IResultHandler, Camera
 
                     try {
                         mResult = this.mMultiFormatReader.decodeWithState(mBitMap);
-                    } catch (ReaderException|NullPointerException|ArrayIndexOutOfBoundsException ex) {
+                    } catch (ReaderException | NullPointerException
+                            | ArrayIndexOutOfBoundsException ex) {
                         // If nothing was found, do nothing and continue to scan
                     } finally {
                         this.mMultiFormatReader.reset();
@@ -193,18 +219,10 @@ public class ARAppActivity extends GvrActivity implements IResultHandler, Camera
                     });
                 }
             } catch (RuntimeException ex) {
-                Log.e(TAG, ex.toString(), ex);
+                Log.e(mTag, ex.toString(), ex);
                 ex.printStackTrace();
             }
         }
-    }
-
-    /**
-     * Method which returns instance of ARAppView class.
-     * @return ARAppView instance
-     */
-    public ARAppView getARAppView() {
-        return mARAppView;
     }
 
     /**
@@ -241,7 +259,8 @@ public class ARAppActivity extends GvrActivity implements IResultHandler, Camera
      * TODO What does PlanarYUVLuminanceSource do?
      */
     private PlanarYUVLuminanceSource buildLuminanceSource(byte[] data, int width, int height) {
-        //TODO draw a square or rect on view and tell user to hold qrcode inside of it, then get its coordinates, width and height
+        //TODO draw a square or rect on view and tell user to hold qrcode inside of it,
+        // then get its coordinates, width and height
 //        Rect rect = this.getFramingRectInPreview(width, height);
 //        if(rect == null) {
 //            return null;
@@ -252,7 +271,7 @@ public class ARAppActivity extends GvrActivity implements IResultHandler, Camera
             source = new PlanarYUVLuminanceSource(data, width, height, 0, 0, width, height, false);
         } catch (Exception ex) {
             ex.printStackTrace();
-            Log.e(TAG, ex.toString(), ex);
+            Log.e(mTag, ex.toString(), ex);
         }
 
         return source;
@@ -265,8 +284,8 @@ public class ARAppActivity extends GvrActivity implements IResultHandler, Camera
     private void initMultiFormatReader() {
         EnumMap hints = new EnumMap(DecodeHintType.class);
         hints.put(DecodeHintType.POSSIBLE_FORMATS, ALL_FORMATS);
-        this.mMultiFormatReader = new MultiFormatReader();
-        this.mMultiFormatReader.setHints(hints);
+        mMultiFormatReader = new MultiFormatReader();
+        mMultiFormatReader.setHints(hints);
     }
 
     /**

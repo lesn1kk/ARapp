@@ -15,19 +15,52 @@ import java.nio.FloatBuffer;
 import javax.microedition.khronos.opengles.GL10;
 
 @SuppressWarnings("FieldCanBeLocal")
-public class ARAppCamera {
+final class ARAppCamera {
 
-    private static String TAG = "ARAppCamera";
+    /**
+     * Class TAG, used to log data.
+     */
+    private static String mTag = "ARAppCamera";
 
-    // Below are variables used in OpenGL program
-    private FloatBuffer screenVertBuffer, textVertBuffer;
-    private final int mProgram;
-    private ARAppActivity mContext;
+    /**
+     * Instance of camera object. It is used to connect to the hardware camera, set its parameters,
+     * open etc.
+     */
     private static Camera mCamera;
-    private ARAppStereoRenderer mRenderer;
 
-    private int mPositionHandle, mTextureCoordHandle;
+    /**
+     * OpenGL ES 2.0
+     * Buffers used by OpenGL program.
+     */
+    private FloatBuffer screenVerticesBuffer, textVerticesBuffer;
 
+    /**
+     * OpenGL ES 2.0
+     * OpenGL program.
+     */
+    private final int mProgram;
+
+    /**
+     * OpenGL ES 2.0
+     * Local copy of main activity context.
+     */
+    private ARAppActivity mContext;
+
+
+    /**
+     * OpenGL ES 2.0
+     * Handlers to variables from OpenGL shaders.
+     */
+    private int mPositionHandle, mTextureCoordsHandle;
+
+    /**
+     * OpenGL ES 2.0
+     * Array that contains a positions of screen vertices.
+     * |-1, 1       1, 1|
+     * |                |
+     * |                |
+     * |-1,-1       1,-1|
+     */
     private float[] screenVert = {
             -1.0F, 1.0F,
             1.0F, 1.0F,
@@ -35,8 +68,16 @@ public class ARAppCamera {
 
             1.0F, -1.0F,
             -1.0F, -1.0F,
-            -1.0F, 1.0F,};
+            -1.0F, 1.0F};
 
+    /**
+     * OpenGL ES 2.0
+     * Array that contains a positions of texture vertices.
+     * |0, 1       1, 1|
+     * |               |
+     * |               |
+     * |0, 0       1, 0|
+     */
     private float[] textVert = {
             0.0F, 0.0F,
             1.0F, 0.0F,
@@ -47,14 +88,24 @@ public class ARAppCamera {
             0.0F, 0.0F};
 
     // number of coordinates per vertex in this array
-    static final int COORDS_PER_VERTEX = 2;
-    private final int vertexStride = COORDS_PER_VERTEX * 4; // 4 bytes per vertex
+    /**
+     * OpenGL ES 2.0
+     * Number of coordinates per vertex in above arrays.
+     */
+    private static final int COORDS_PER_VERTEX = 2;
 
-    private int texture;
+    /**
+     * OpenGL ES 2.0
+     * Number of bytes to allocate per vertex.
+     */
+    private final int vertexStride = COORDS_PER_VERTEX * 4;
 
-    public int getTexture() {
-        return texture;
-    }
+    /**
+     * Texture we will use to draw in OpenGL. It is created when instance of this class is created,
+     * then in ARAppStereoRenderer, it is used to create a surface, which will be used for
+     * camera input stream
+     */
+    private int mTexture;
 
     private int createTexture() {
         int[] texture = new int[1];
@@ -73,24 +124,26 @@ public class ARAppCamera {
         return texture[0];
     }
 
-    public ARAppCamera(Context _mContext) {
-        mContext = (ARAppActivity)_mContext;
-        texture = createTexture();
+    public ARAppCamera(Context context) {
+        mContext = (ARAppActivity) context;
+        mTexture = createTexture();
 
         ByteBuffer bb = ByteBuffer.allocateDirect(screenVert.length * 4);
         bb.order(ByteOrder.nativeOrder());
-        screenVertBuffer = bb.asFloatBuffer();
-        screenVertBuffer.put(screenVert);
-        screenVertBuffer.position(0);
+        screenVerticesBuffer = bb.asFloatBuffer();
+        screenVerticesBuffer.put(screenVert);
+        screenVerticesBuffer.position(0);
 
         ByteBuffer bb2 = ByteBuffer.allocateDirect(textVert.length * 4);
         bb2.order(ByteOrder.nativeOrder());
-        textVertBuffer = bb2.asFloatBuffer();
-        textVertBuffer.put(textVert);
-        textVertBuffer.position(0);
+        textVerticesBuffer = bb2.asFloatBuffer();
+        textVerticesBuffer.put(textVert);
+        textVerticesBuffer.position(0);
 
-        int vertexShader = ARAppStereoRenderer.loadShader(GLES20.GL_VERTEX_SHADER, R.raw.cam_vertex);
-        int fragmentShader = ARAppStereoRenderer.loadShader(GLES20.GL_FRAGMENT_SHADER, R.raw.cam_fragment);
+        int vertexShader = ARAppStereoRenderer.loadShader(GLES20.GL_VERTEX_SHADER,
+                R.raw.cam_vertex);
+        int fragmentShader = ARAppStereoRenderer.loadShader(GLES20.GL_FRAGMENT_SHADER,
+                R.raw.cam_fragment);
 
         mProgram = GLES20.glCreateProgram();             // create empty OpenGL ES Program
         GLES20.glAttachShader(mProgram, vertexShader);   // add the vertex shader to program
@@ -102,27 +155,28 @@ public class ARAppCamera {
         GLES20.glUseProgram(mProgram);
 
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-        GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, texture);
+        GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, mTexture);
 
         mPositionHandle = GLES20.glGetAttribLocation(mProgram, "position");
         GLES20.glEnableVertexAttribArray(mPositionHandle);
-        GLES20.glVertexAttribPointer(mPositionHandle, COORDS_PER_VERTEX, GLES20.GL_FLOAT, true, vertexStride, screenVertBuffer);
+        GLES20.glVertexAttribPointer(mPositionHandle, COORDS_PER_VERTEX, GLES20.GL_FLOAT, true,
+                vertexStride, screenVerticesBuffer);
 
-        mTextureCoordHandle = GLES20.glGetAttribLocation(mProgram, "inputTextureCoordinate");
-        GLES20.glEnableVertexAttribArray(mTextureCoordHandle);
-        GLES20.glVertexAttribPointer(mTextureCoordHandle, COORDS_PER_VERTEX, GLES20.GL_FLOAT, false, vertexStride, textVertBuffer);
+        mTextureCoordsHandle = GLES20.glGetAttribLocation(mProgram, "inputTextureCoordinate");
+        GLES20.glEnableVertexAttribArray(mTextureCoordsHandle);
+        GLES20.glVertexAttribPointer(mTextureCoordsHandle, COORDS_PER_VERTEX, GLES20.GL_FLOAT, false,
+                vertexStride, textVerticesBuffer);
 
         GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 6);
 
         // Disable vertex array
         GLES20.glDisableVertexAttribArray(mPositionHandle);
-        GLES20.glDisableVertexAttribArray(mTextureCoordHandle);
+        GLES20.glDisableVertexAttribArray(mTextureCoordsHandle);
     }
 
-    public void startCamera(int texture) {
-        SurfaceTexture surface = new SurfaceTexture(texture);
-        mRenderer = ARAppView.getRenderer();
-        mRenderer.setSurface(surface);
+    public void startCamera() {
+        SurfaceTexture surface = new SurfaceTexture(mTexture);
+        ARAppStereoRenderer.getInstance().setSurface(surface);
 
         mCamera = Camera.open();
 
@@ -148,7 +202,7 @@ public class ARAppCamera {
             mCamera.startPreview();
 
         } catch (IOException ex) {
-            Log.e(TAG, "CAM LAUNCH FAILED");
+            Log.e(mTag, "CAM LAUNCH FAILED");
         }
     }
 
@@ -157,7 +211,7 @@ public class ARAppCamera {
     }
 
     public static void focusCamera() {
-        if(mCamera != null) {
+        if (mCamera != null) {
             try {
                 mCamera.cancelAutoFocus();
                 mCamera.autoFocus(new Camera.AutoFocusCallback() {
@@ -167,7 +221,7 @@ public class ARAppCamera {
                     }
                 });
             } catch (Exception e) {
-                Log.e(TAG, "Error during focusCamera!");
+                Log.e(mTag, "Error during focusCamera!");
                 e.printStackTrace();
             }
         }
