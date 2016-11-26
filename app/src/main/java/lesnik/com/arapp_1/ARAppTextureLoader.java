@@ -1,6 +1,5 @@
 package lesnik.com.arapp_1;
 
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.opengl.GLES20;
@@ -11,81 +10,112 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
+/**
+ * Setup and prepares OpenGL program for drawing texture.
+ */
 @SuppressWarnings("FieldCanBeLocal")
-public final class ARAppTextureLoader {
-    public static float[] vertices;
-    public static short[] indices;
-    public static float[] uvs;
-    public FloatBuffer vertexBuffer;
-    public ShortBuffer drawListBuffer;
-    public FloatBuffer uvBuffer;
+final class ARAppTextureLoader {
 
+    /**
+     * We have to create the vertices of our triangle. This is actually size. X, Y, Z.
+     */
+    private float[] screenVertices = new float[] {
+            0.0f, 480f, 0.0f,
+            0.0f, 0.0f, 0.0f,
+            640f, 0.0f, 0.0f,
+            640f, 480f, 0.0f};
+
+    /**
+     * OpenGL ES 2.0
+     *
+     * Create our UV coordinates.
+     * Array that contains a positions of texture vertices.
+     * |0, 1       1, 1|
+     * |               |
+     * |               |
+     * |0, 0       1, 0|
+     */
+    private float[] textureVertices = new float[] {
+            0.0f, 0.0f,
+            0.0f, 1.0f,
+            1.0f, 1.0f,
+            1.0f, 0.0f
+    };
+
+    /**
+     * The order of vertex rendering.
+     */
+    private short[] drawOrder = new short[] {0, 1, 2, 0, 2, 3};
+
+    /**
+     * Screen vertices buffer.
+     */
+    private FloatBuffer screenVerticesBuffer;
+
+    /**
+     * Texture vertices buffer.
+     */
+    private FloatBuffer textureVerticesBuffer;
+
+    /**
+     * Draw order buffer.
+     */
+    private ShortBuffer drawOrderBuffer;
+
+    /**
+     * OpenGL program.
+     */
     private int mProgram;
-    private int vertexShader, fragmentShader;
-    private int mPositionHandle, mTexCoordLoc, mMtrxHandle, mSamplerLoc;
 
+    /**
+     * Singleton instance of this class.
+     */
     private static ARAppTextureLoader mARAppTextureLoader;
 
-    public ARAppTextureLoader() {
-        setup();
-    }
+    /**
+     * Used for making fade effect.
+     */
+    private static float mAlpha = 0.0f;
 
-    public static void createInstance() {
-        mARAppTextureLoader = new ARAppTextureLoader();
-    }
+    /**
+     * Texture used to draw on.
+     */
+    private int mTexture;
 
-    public static ARAppTextureLoader getInstance() {
-        return mARAppTextureLoader;
-    }
-
-    public void setup() {
-        texture = createTexture();
-
-        // We have to create the vertices of our triangle. This is actually size.
-        vertices = new float[] {
-                0.0f, 480f, 0.0f,
-                0.0f, 0.0f, 0.0f,
-                640f, 0.0f, 0.0f,
-                640f, 480f, 0.0f};
-
-        // Create our UV coordinates.
-        uvs = new float[] {
-                0.0f, 0.0f,
-                0.0f, 1.0f,
-                1.0f, 1.0f,
-                1.0f, 0.0f
-        };
-
-        indices = new short[] {0, 1, 2, 0, 2, 3}; // The order of vertex rendering.
+    /**
+     * Constructor, setup and prepares OpenGL.
+     */
+    private ARAppTextureLoader() {
+        mTexture = createTexture();
 
         // The vertex buffer.
-        ByteBuffer bb = ByteBuffer.allocateDirect(vertices.length * 4);
+        ByteBuffer bb = ByteBuffer.allocateDirect(screenVertices.length * 4);
         bb.order(ByteOrder.nativeOrder());
-        vertexBuffer = bb.asFloatBuffer();
-        vertexBuffer.put(vertices);
-        vertexBuffer.position(0);
+        screenVerticesBuffer = bb.asFloatBuffer();
+        screenVerticesBuffer.put(screenVertices);
+        screenVerticesBuffer.position(0);
 
         // initialize byte buffer for the draw list
-        ByteBuffer dlb = ByteBuffer.allocateDirect(indices.length * 2);
+        ByteBuffer dlb = ByteBuffer.allocateDirect(drawOrder.length * 2);
         dlb.order(ByteOrder.nativeOrder());
-        drawListBuffer = dlb.asShortBuffer();
-        drawListBuffer.put(indices);
-        drawListBuffer.position(0);
+        drawOrderBuffer = dlb.asShortBuffer();
+        drawOrderBuffer.put(drawOrder);
+        drawOrderBuffer.position(0);
 
         // The texture buffer
-        ByteBuffer bb1 = ByteBuffer.allocateDirect(uvs.length * 4);
+        ByteBuffer bb1 = ByteBuffer.allocateDirect(textureVertices.length * 4);
         bb1.order(ByteOrder.nativeOrder());
-        uvBuffer = bb1.asFloatBuffer();
-        uvBuffer.put(uvs);
-        uvBuffer.position(0);
+        textureVerticesBuffer = bb1.asFloatBuffer();
+        textureVerticesBuffer.put(textureVertices);
+        textureVerticesBuffer.position(0);
 
         // Enable transparency
         GLES20.glEnable(GLES20.GL_BLEND);
         GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA);
 
-        vertexShader = ARAppStereoRenderer.loadShader(GLES20.GL_VERTEX_SHADER,
+        int vertexShader = ARAppStereoRenderer.loadShader(GLES20.GL_VERTEX_SHADER,
                 R.raw.texture_vertex);
-        fragmentShader = ARAppStereoRenderer.loadShader(GLES20.GL_FRAGMENT_SHADER,
+        int fragmentShader = ARAppStereoRenderer.loadShader(GLES20.GL_FRAGMENT_SHADER,
                 R.raw.texture_fragment);
 
         mProgram = GLES20.glCreateProgram();             // create empty OpenGL ES Program
@@ -94,9 +124,26 @@ public final class ARAppTextureLoader {
         GLES20.glLinkProgram(mProgram);                  // creates OpenGL ES program executables
     }
 
-    private int texture;
+    /**
+     * Creates singleton instance of this class.
+     */
+    static void createInstance() {
+        mARAppTextureLoader = new ARAppTextureLoader();
+    }
 
-    public int createTexture() {
+    /**
+     * Returns instance of this class.
+     * @return This class
+     */
+    static ARAppTextureLoader getInstance() {
+        return mARAppTextureLoader;
+    }
+
+    /**
+     * Creates new OpenGL texture and sets parameters.
+     * @return Texture
+     */
+    private int createTexture() {
         int[] textureArray = new int[1];
         GLES20.glGenTextures(1, textureArray, 0);
 
@@ -113,7 +160,12 @@ public final class ARAppTextureLoader {
         return textureArray[0];
     }
 
-    public boolean loadTexture(int id) {
+    /**
+     * Load texture from file id to OpenGL texture 1.
+     * @param id ID of texture
+     * @return true if success
+     */
+    boolean loadTexture(int id) {
         // Temporary create a bitmap
         //BitmapFactory.Options opts = new BitmapFactory.Options();
         //opts.inPreferredConfig = Bitmap.Config.ARGB_8888;
@@ -137,41 +189,50 @@ public final class ARAppTextureLoader {
         return true;
     }
 
-    public static void resetAlpha() {
-        alphaValue = 0.0f;
+    /**
+     * Resets alpha. Called when new texture appears.
+     */
+    static void resetAlpha() {
+        mAlpha = 0.0f;
     }
 
-    private static float alphaValue = 0.0f;
-
-    public void draw(float[] m) {
+    /**
+     * Called every time when {@link ARAppStereoRenderer#onDrawEye(Eye)} is called and texture is
+     * loaded.
+     * @param textureViewAndProjectionMatrix View and projection matrix.
+     */
+    void draw(float[] textureViewAndProjectionMatrix) {
         GLES20.glUseProgram(mProgram);
 
-        mPositionHandle = GLES20.glGetAttribLocation(mProgram, "vPosition");
+        int mPositionHandle = GLES20.glGetAttribLocation(mProgram, "vPosition");
         GLES20.glEnableVertexAttribArray(mPositionHandle);
-        GLES20.glVertexAttribPointer(mPositionHandle, 3, GLES20.GL_FLOAT, false, 0, vertexBuffer);
+        GLES20.glVertexAttribPointer(mPositionHandle, 3, GLES20.GL_FLOAT, false, 0,
+                screenVerticesBuffer);
 
-        mTexCoordLoc = GLES20.glGetAttribLocation(mProgram, "a_texCoord");
-        GLES20.glEnableVertexAttribArray(mTexCoordLoc);
-        GLES20.glVertexAttribPointer(mTexCoordLoc, 2, GLES20.GL_FLOAT, false, 0, uvBuffer);
+        int mTexCoordinatesLoc = GLES20.glGetAttribLocation(mProgram, "a_texCoord");
+        GLES20.glEnableVertexAttribArray(mTexCoordinatesLoc);
+        GLES20.glVertexAttribPointer(mTexCoordinatesLoc, 2, GLES20.GL_FLOAT, false, 0,
+                textureVerticesBuffer);
 
-        mMtrxHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix");
-        GLES20.glUniformMatrix4fv(mMtrxHandle, 1, false, m, 0);
+        int mMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix");
+        GLES20.glUniformMatrix4fv(mMatrixHandle, 1, false, textureViewAndProjectionMatrix, 0);
 
-        mSamplerLoc = GLES20.glGetUniformLocation(mProgram, "s_texture");
-        GLES20.glUniform1i(mSamplerLoc, texture);
+        int mSamplerLoc = GLES20.glGetUniformLocation(mProgram, "s_texture");
+        GLES20.glUniform1i(mSamplerLoc, mTexture);
 
-        if (alphaValue < 1.0f) {
-            alphaValue += 0.01f;
+        if (mAlpha < 1.0f) {
+            mAlpha += 0.01f;
         }
+
         int mAlphaHandle = GLES20.glGetUniformLocation(mProgram, "alpha");
-        GLES20.glUniform1f(mAlphaHandle, alphaValue);
+        GLES20.glUniform1f(mAlphaHandle, mAlpha);
 
         // Draw the triangle
-        GLES20.glDrawElements(GLES20.GL_TRIANGLES, indices.length,
-                GLES20.GL_UNSIGNED_SHORT, drawListBuffer);
+        GLES20.glDrawElements(GLES20.GL_TRIANGLES, drawOrder.length,
+                GLES20.GL_UNSIGNED_SHORT, drawOrderBuffer);
 
         // Disable vertex array
         GLES20.glDisableVertexAttribArray(mPositionHandle);
-        GLES20.glDisableVertexAttribArray(mTexCoordLoc);
+        GLES20.glDisableVertexAttribArray(mTexCoordinatesLoc);
     }
 }

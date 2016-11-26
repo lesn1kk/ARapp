@@ -10,74 +10,128 @@ import android.util.Log;
 
 import java.util.ArrayList;
 
+/**
+ * This class setup and prepares android speech recognition service.
+ * Also, process the output and sets appropriate texture.
+ * If error occurs, also sets a proper texture.
+ */
 final class ARAppSpeech implements RecognitionListener {
-    //singleton
+    /**
+     * Make sure we have only one instance of this class (singleton).
+     */
     private static final ARAppSpeech mARAppSpeech = new ARAppSpeech();
-    private SpeechRecognizer mSpeechRecognizer;
-    private final String mTag = this.getClass().getName();
-    private ARAppActivity mContext;
 
-    public static ARAppSpeech getInstance() {
+    /**
+     * Speech recognized variable.
+     */
+    private SpeechRecognizer mSpeechRecognizer;
+
+    /**
+     * Set to true when recognized command is available.
+     */
+    private boolean isCommandAvailable;
+
+    /**
+     * Class tag used in debug logging.
+     */
+    private final String mTag = this.getClass().getName();
+
+    /**
+     * Returns instance of this class.
+     * @return this instance.
+     */
+    static ARAppSpeech getInstance() {
         return mARAppSpeech;
     }
 
-    public void init(Context context) {
-        mContext = (ARAppActivity) context;
-        mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(mContext);
+    /**
+     * Initialize speech recognition service and sets this class as listener.
+     * TODO When this check is false, throw an alert. It is necessary!
+     * boolean check = SpeechRecognizer.isRecognitionAvailable(mContext);
+     */
+    void init() {
+        mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(ARAppActivity.getARAppContext());
         mSpeechRecognizer.setRecognitionListener(this);
-
-        // TODO When this check is false, throw an alert. It is necessary!
-        //boolean check = SpeechRecognizer.isRecognitionAvailable(mContext);
     }
 
-    public void startListening() {
+    /**
+     * Starts listening for voice commands.
+     */
+    void startListening() {
         Log.d(mTag, "startListening");
 
         Intent mIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         mSpeechRecognizer.startListening(mIntent);
     }
 
+    /**
+     * From RecognitionListener, called when service is listening for commands.
+     * @param bundle ?
+     */
     @Override
     public void onReadyForSpeech(Bundle bundle) {
         Log.d(mTag, "onReadyForSpeech");
 
-        ARAppStereoRenderer.onErrorListening = false;
-
-        ARAppStereoRenderer.setTexture(R.drawable.listening);
+        ARAppStereoRenderer.getInstance().setListeningError(false);
+        ARAppStereoRenderer.getInstance().setTexture(R.drawable.listening);
     }
 
+    /**
+     * Called when first sound changes are registered.
+     */
     @Override
     public void onBeginningOfSpeech() {
     }
 
+    /**
+     * Called every time device registers sound change.
+     * @param v The new RMS dB value
+     */
     @Override
     public void onRmsChanged(float v) {
     }
 
+    /**
+     * More sound has been received. The purpose of this function is to allow giving feedback to
+     * the user regarding the captured audio. There is no guarantee that this method will be called.
+     * @param bytes a buffer containing a sequence of big-endian 16-bit integers representing a
+     *              single channel audio stream. The sample rate is implementation dependent.
+     */
     @Override
     public void onBufferReceived(byte[] bytes) {
     }
 
+    /**
+     * Called when user stops speaking.
+     */
     @Override
     public void onEndOfSpeech() {
     }
 
+    /**
+     * Called when error occurs. Error 4 means no internet connection, other are related to
+     * recognition error.
+     * @param i Error code.
+     */
     @Override
     public void onError(int i) {
         Log.e(mTag, "onError " + i);
-        ARAppStereoRenderer.onErrorListeningNumber = i;
-        ARAppStereoRenderer.onErrorListening = true;
-        ARAppStereoRenderer.clearTexture();
+        ARAppStereoRenderer.getInstance().setListeningError(i, true);
         ARAppTextureLoader.resetAlpha();
     }
 
-    private boolean isCommandAvailable;
-
+    /**
+     * Called when command is recognized.
+     */
     private void setCommandAvailableAndClearTexture() {
         isCommandAvailable = true;
-        ARAppStereoRenderer.clearTexture();
+        ARAppStereoRenderer.getInstance().clearTexture();
     }
 
+    /**
+     * Called when recognition service returns recognized commands.
+     * @param bundle Contains recognized words.
+     */
     @Override
     public void onResults(Bundle bundle) {
         Log.d(mTag, "onResults");
@@ -92,33 +146,38 @@ final class ARAppSpeech implements RecognitionListener {
                     case "scan":
                         // Clear screen
                         setCommandAvailableAndClearTexture();
-                        mContext.turnOnQRCodeScanner();
-                        ARAppStereoRenderer.setTexture(R.drawable.scanningmode);
+                        ARAppActivity.getARAppContext().turnOnQRCodeScanner();
+                        ARAppStereoRenderer.getInstance().setTexture(R.drawable.scanningmode);
                         break;
                     case "screenshot":
                         // Clear screen
                         setCommandAvailableAndClearTexture();
-                        ARAppStereoRenderer.takeScreenshot = true;
+                        ARAppStereoRenderer.getInstance().setIsTakingScreenshot(true);
                         break;
                     case "stop":
                         // Clear screen
                         setCommandAvailableAndClearTexture();
-                        mContext.turnOffQRCodeScanner();
+                        ARAppActivity.getARAppContext().turnOffQRCodeScanner();
                         break;
                     case "break":
                         // Clear screen
                         setCommandAvailableAndClearTexture();
-                        mContext.turnOffQRCodeScanner();
+                        ARAppActivity.getARAppContext().turnOffQRCodeScanner();
                         break;
                     case "clear":
                         // Clear screen
                         setCommandAvailableAndClearTexture();
-                        mContext.turnOffQRCodeScanner();
+                        ARAppActivity.getARAppContext().turnOffQRCodeScanner();
+                        break;
+                    case "cancel":
+                        // Clear screen
+                        setCommandAvailableAndClearTexture();
+                        ARAppActivity.getARAppContext().turnOffQRCodeScanner();
                         break;
                     case "blue":
                         // Clear screen
                         setCommandAvailableAndClearTexture();
-                        ARAppStereoRenderer.setTexture(R.drawable.blue);
+                        ARAppStereoRenderer.getInstance().setTexture(R.drawable.blue);
                         break;
                     default:
                         Log.d(mTag, "defaultCase");
@@ -128,17 +187,25 @@ final class ARAppSpeech implements RecognitionListener {
         }
 
         if (!isCommandAvailable) {
-            ARAppStereoRenderer.setTexture(R.drawable.errorcommandnotfound);
+            ARAppStereoRenderer.getInstance().setTexture(R.drawable.errorcommandnotfound);
         }
     }
 
+    /**
+     * Called when partial recognition results are available. The callback might be called at any
+     * time between onBeginningOfSpeech() and onResults(Bundle) when partial results are ready.
+     * @param bundle Contains returned results
+     */
     @Override
     public void onPartialResults(Bundle bundle) {
-
     }
 
+    /**
+     * Reserved for adding future events.
+     * @param i The type of the occurred event
+     * @param bundle A Bundle containing the passed parameters
+     */
     @Override
     public void onEvent(int i, Bundle bundle) {
-
     }
 }

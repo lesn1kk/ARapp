@@ -6,20 +6,77 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
+/**
+ * Class responsible for drawing 'scanning line' and preparing OpenGL for it.
+ */
 final class ARAppQRCodeScanner {
+
+    /**
+     * Main OpenGL program.
+     */
     private final int mProgram;
+
+    /**
+     * Vertex buffer, used for drawing buffer in appropriate order.
+     */
     private FloatBuffer vertexBuffer;
 
+    /**
+     * Number of coordinates per vertex, we only need x and y so 2 is enough.
+     */
     static final int COORDS_PER_VERTEX = 2;
 
-    private static float[] lineCoords = {// in counterclockwise order:
+    /**
+     * Coordinates of two line vertexes, it does not use all screen wide.
+     */
+    private static float[] lineCoords = {
             -1.5f, 0.0f,
             1.5f, 0.0f
     };
 
-    private float[] color = {1.0f, 0.0f, 0.0f, 0.3f}; //set line color to red
+    /**
+     * Color of line, red with alpha set to 0.3.
+     */
+    private float[] color = {1.0f, 0.0f, 0.0f, 0.3f};
 
-    public ARAppQRCodeScanner() {
+    /**
+     * A value which is added to lineMatrix coordinates every time it is drawn to make it move.
+     */
+    private float diff = 0.01f;
+
+    /**
+     * Number of vertexes.
+     */
+    private final int vertexCount = lineCoords.length / COORDS_PER_VERTEX;
+
+    /**
+     * Reserve 4 bytes per vertex.
+     */
+    private final int vertexStride = COORDS_PER_VERTEX * 4;
+
+    /**
+     * Matrix which is added to actual line position every time it is drawn, to make it move.
+     */
+    // TODO Figure out how it works, the last one is Z I believe
+    private float[] lineMatrix = {
+            0.0f, 0.0f,
+            0.0f, 1.0f};
+
+    /**
+     * Variable used to add diff to lineMatrix every second call to draw, because otherwise, line
+     * position on one eye would be always different than the other.
+     */
+    private byte counter = 0;
+
+    /**
+     * Variable to store actual system time, used to control speed of moving line.
+     */
+    private long systemTime;
+
+    /**
+     * Constructor, prepares OpenGL program and sets systemTime variable.
+     */
+     ARAppQRCodeScanner() {
         // initialize vertex byte buffer for shape coordinates
         ByteBuffer bb = ByteBuffer.allocateDirect(
                 // (number of coordinate values * 4 bytes per float)
@@ -54,31 +111,16 @@ final class ARAppQRCodeScanner {
         systemTime = System.currentTimeMillis();
     }
 
-    private int mPositionHandle;
-    private int mColorHandle;
-    private float diff = 0.01f;
-
-    private final int vertexCount = lineCoords.length / COORDS_PER_VERTEX;
-    private final int vertexStride = COORDS_PER_VERTEX * 4; // 4 bytes per vertex
-    private int lineProjectionViewParam;
-
-    // TODO Figure out how it works, the last one is Z I believe
-    private float[] lineMatrix = {0.0f, 0.0f,
-                                  0.0f, 1.0f};
-    private short counter = 0;
-
-    private long systemTime;
-    private long systemTempTime;
-
-    public void draw() {
+    /**
+     * Draw method, called every time onDrawEye is called. Simple draws line on the screen.
+     */
+    void draw() {
         // Add program to OpenGL ES environment
         GLES20.glUseProgram(mProgram);
 
-        // get handle to vertex shader's vPosition member
-        // get handle to fragment shader's vColor member
-        mPositionHandle = GLES20.glGetAttribLocation(mProgram, "vPosition");
-        mColorHandle = GLES20.glGetUniformLocation(mProgram, "vColor");
-        lineProjectionViewParam = GLES20.glGetUniformLocation(mProgram, "u_MVP");
+        int mPositionHandle = GLES20.glGetAttribLocation(mProgram, "vPosition");
+        int mColorHandle = GLES20.glGetUniformLocation(mProgram, "vColor");
+        int lineProjectionViewParam = GLES20.glGetUniformLocation(mProgram, "u_MVP");
 
         // Enable a handle to the triangle vertices
         GLES20.glEnableVertexAttribArray(mPositionHandle);
@@ -102,8 +144,9 @@ final class ARAppQRCodeScanner {
 
         //TODO This is temporary solution to see if it works, I need to figure out better way,
         // because this is highly related with phones cpu and gpu power
-        systemTempTime = System.currentTimeMillis();
+        long systemTempTime = System.currentTimeMillis();
 
+        counter++;
         if (systemTempTime - systemTime >= 30) {
             // We check if counter is greater than 1 because we need to update the y coord
             // every second time, because otherwise, the lines wont be synchronized
@@ -115,6 +158,7 @@ final class ARAppQRCodeScanner {
                 // TODO Figure out why I need only to increment one of the y values ?
                 lineMatrix[1] += diff;
                 //lineMatrix[3] += diff;
+                counter = 0;
             }
 
             systemTime = systemTempTime;

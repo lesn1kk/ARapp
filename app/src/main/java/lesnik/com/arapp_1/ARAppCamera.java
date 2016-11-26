@@ -61,7 +61,7 @@ final class ARAppCamera {
      * |                |
      * |-1,-1       1,-1|
      */
-    private float[] screenVert = {
+    private float[] screenVertices = {
             -1.0F, 1.0F,
             1.0F, 1.0F,
             1.0F, -1.0F,
@@ -78,7 +78,7 @@ final class ARAppCamera {
      * |               |
      * |0, 0       1, 0|
      */
-    private float[] textVert = {
+    private float[] textureVertices = {
             0.0F, 0.0F,
             1.0F, 0.0F,
             1.0F, 1.0F,
@@ -91,13 +91,13 @@ final class ARAppCamera {
      * OpenGL ES 2.0
      * Number of coordinates per vertex in above arrays.
      */
-    private static final int COORDS_PER_VERTEX = 2;
+    private static final int COORDINATES_PER_VERTEX = 2;
 
     /**
      * OpenGL ES 2.0
      * Number of bytes to allocate per vertex.
      */
-    private final int vertexStride = COORDS_PER_VERTEX * 4;
+    private final int vertexStride = COORDINATES_PER_VERTEX * 4;
 
     /**
      * Texture we will use to draw in OpenGL. It is created when instance of this class is created,
@@ -144,16 +144,16 @@ final class ARAppCamera {
     private ARAppCamera() {
         mTexture = createTexture();
 
-        ByteBuffer bb = ByteBuffer.allocateDirect(screenVert.length * 4);
+        ByteBuffer bb = ByteBuffer.allocateDirect(screenVertices.length * 4);
         bb.order(ByteOrder.nativeOrder());
         screenVerticesBuffer = bb.asFloatBuffer();
-        screenVerticesBuffer.put(screenVert);
+        screenVerticesBuffer.put(screenVertices);
         screenVerticesBuffer.position(0);
 
-        ByteBuffer bb2 = ByteBuffer.allocateDirect(textVert.length * 4);
+        ByteBuffer bb2 = ByteBuffer.allocateDirect(textureVertices.length * 4);
         bb2.order(ByteOrder.nativeOrder());
         textVerticesBuffer = bb2.asFloatBuffer();
-        textVerticesBuffer.put(textVert);
+        textVerticesBuffer.put(textureVertices);
         textVerticesBuffer.position(0);
 
         int vertexShader = ARAppStereoRenderer.loadShader(GLES20.GL_VERTEX_SHADER,
@@ -204,12 +204,12 @@ final class ARAppCamera {
 
         mPositionHandle = GLES20.glGetAttribLocation(mProgram, "position");
         GLES20.glEnableVertexAttribArray(mPositionHandle);
-        GLES20.glVertexAttribPointer(mPositionHandle, COORDS_PER_VERTEX,
+        GLES20.glVertexAttribPointer(mPositionHandle, COORDINATES_PER_VERTEX,
                 GLES20.GL_FLOAT, true, vertexStride, screenVerticesBuffer);
 
         mTextureCoordsHandle = GLES20.glGetAttribLocation(mProgram, "inputTextureCoordinate");
         GLES20.glEnableVertexAttribArray(mTextureCoordsHandle);
-        GLES20.glVertexAttribPointer(mTextureCoordsHandle, COORDS_PER_VERTEX,
+        GLES20.glVertexAttribPointer(mTextureCoordsHandle, COORDINATES_PER_VERTEX,
                 GLES20.GL_FLOAT, false, vertexStride, textVerticesBuffer);
 
         GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 6);
@@ -287,4 +287,3 @@ final class ARAppCamera {
         }
     }
 }
-

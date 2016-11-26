@@ -5,26 +5,40 @@ import android.content.Context;
 import com.google.vr.sdk.base.GvrView;
 
 /**
- * Contains ARAppRenderer singleton instance.
+ * Prepares view.
  */
-class ARAppView extends GvrView {
-    private static ARAppStereoRenderer mARAppRenderer;
+final class ARAppView extends GvrView {
+
+    /**
+     * Singleton instance of this class.
+     */
     private static ARAppView mARAppView;
 
-    private ARAppView(Context context) {
-        super(context);
+    /**
+     * Constructor, sets renderer for this view.
+     */
+    private ARAppView() {
+        super(ARAppActivity.getARAppContext());
 
         setEGLContextClientVersion(2);
 
-        ARAppStereoRenderer.createInstance(context);
-        mARAppRenderer = ARAppStereoRenderer.getInstance();
+        ARAppStereoRenderer.createInstance();
+        ARAppStereoRenderer mARAppRenderer = ARAppStereoRenderer.getInstance();
         setRenderer(mARAppRenderer);
         //this.setTransitionViewEnabled(true);
     }
-    public static void createInstance(Context context) {
-        mARAppView = new ARAppView(context);
+
+    /**
+     * Create singleton instance of this class.
+     */
+    public static void createInstance() {
+        mARAppView = new ARAppView();
     }
 
+    /**
+     * Returns instance of this class.
+     * @return This class.
+     */
     public static ARAppView getInstance() {
         return mARAppView;
     }

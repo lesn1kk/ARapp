@@ -35,8 +35,7 @@ import java.util.List;
  * TODO Consider creating static method that return this context.
  */
 @SuppressWarnings("deprecation, unchecked")
-class ARAppActivity extends GvrActivity implements IResultHandler, Camera.PreviewCallback {
-
+public class ARAppActivity extends GvrActivity implements IResultHandler, Camera.PreviewCallback {
     /**
      * Application context available for all packages by calling getter method.
      */
@@ -85,13 +84,13 @@ class ARAppActivity extends GvrActivity implements IResultHandler, Camera.Previe
 
         mContext = this;
 
-        ARAppView.createInstance(this);
+        ARAppView.createInstance();
         mVibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
         initMultiFormatReader();
 
         mARAppSpeech = ARAppSpeech.getInstance();
-        mARAppSpeech.init(this);
+        mARAppSpeech.init();
 
         setContentView(ARAppView.getInstance());
     }
@@ -109,16 +108,16 @@ class ARAppActivity extends GvrActivity implements IResultHandler, Camera.Previe
 
         switch (mResultString) {
             case "zielony":
-                ARAppStereoRenderer.setTexture(R.drawable.green);
+                ARAppStereoRenderer.getInstance().setTexture(R.drawable.green);
                 break;
             case "green":
-                ARAppStereoRenderer.setTexture(R.drawable.green);
+                ARAppStereoRenderer.getInstance().setTexture(R.drawable.green);
                 break;
             case "niebieski":
-                ARAppStereoRenderer.setTexture(R.drawable.blue);
+                ARAppStereoRenderer.getInstance().setTexture(R.drawable.blue);
                 break;
             case "blue":
-                ARAppStereoRenderer.setTexture(R.drawable.blue);
+                ARAppStereoRenderer.getInstance().setTexture(R.drawable.blue);
                 break;
             default:
                 break;
@@ -249,7 +248,7 @@ class ARAppActivity extends GvrActivity implements IResultHandler, Camera.Previe
      * TODO Check if it would be possible to move handling qr scanner results from here.
      */
     public void turnOnQRCodeScanner() {
-        ARAppStereoRenderer.drawScanningLine = true;
+        ARAppStereoRenderer.getInstance().setIsScanning(true);
         mResultHandler = this;
     }
 
@@ -260,7 +259,7 @@ class ARAppActivity extends GvrActivity implements IResultHandler, Camera.Previe
      * captured)
      */
     public void turnOffQRCodeScanner() {
-        ARAppStereoRenderer.drawScanningLine = false;
+        ARAppStereoRenderer.getInstance().setIsScanning(false);
         mResultHandler = null;
     }
 

@@ -27,53 +27,115 @@ import java.nio.ByteOrder;
  * It is responsible for setting OpenGL context, setting up the program and drawing everything.
  */
 final class ARAppStereoRenderer implements GvrView.StereoRenderer {
-    // These matrices are used to properly draw a texture
-    private final float[] mtrxProjection = new float[16];
-    private final float[] mtrxView = new float[16];
-    private final float[] mtrxProjectionAndView = new float[16];
 
-    // These matrices are used to properly draw a camera's input image
-    private float[] view;
+    /**
+     * These matrices are used to properly draw a texture/
+     * Projection matrix.
+     */
+    private final float[] textureProjectionMatrix = new float[16];
+
+    /**
+     * View matrix.
+     */
+    private final float[] textureViewMatrix = new float[16];
+
+    /**
+     * View and projection matrix.
+     */
+    private final float[] textureViewAndProjectionMatrix = new float[16];
+
+    /**
+     * These matrices are used to properly draw a camera's input image.
+     * Projection matrix.
+     */
+    private float[] cameraViewMatrix;
+
+    /**
+     * Variable used to apply transformation to camera matrix.
+     */
     private float[] camera;
 
-    // TODO Docs these variables
+    /**
+     * Instance of ARAppCamera class.
+     */
     private ARAppCamera mARAppCamera;
-    private SurfaceTexture surface;
+
+    /**
+     * Surface used to draw camera's images.
+     * See {@link #setSurface(SurfaceTexture)}
+     */
+    private SurfaceTexture mSurface;
+
+    /**
+     * Instance of QR Code scanner.
+     */
     private ARAppQRCodeScanner mScanningLine;
-    private static ARAppActivity mContext;
+
+    /**
+     * This class singleton instance.
+     */
     private static ARAppStereoRenderer mRenderer;
+
+    /**
+     * Instance of texture loader class.
+     */
     private static ARAppTextureLoader mARAppTextureLoader;
 
+    /**
+     * This clss tag, used in debug logging.
+     */
     private static final String mTag = "ARAppStereoRenderer";
+
+    /**
+     * Value used in calculation of view matrix.
+     */
     private static final float CAMERA_Z = 0.01f;
 
-    public static boolean drawScanningLine = false;
-    public static boolean isLoaded = false;
-    public static int texture = 0;
+    /**
+     * If true, draw scanning line.
+     */
+    private boolean isScanning = false;
 
-    public static boolean onErrorListening = false;
-    public static boolean takeScreenshot = false;
-    public static int onErrorListeningNumber = 0;
+    /**
+     * Because loading of texture takes time and causes lag, to avoid this make sure texture is
+     * only loaded once.
+     */
+    private boolean isLoaded = false;
+
+    /**
+     * Texture id to draw.
+     */
+    private int mTexture = 0;
+
+    /**
+     * If true, draw error texture.
+     */
+    private boolean onErrorListening = false;
+
+    /**
+     * If true, process camera's input and save.
+     */
+    private boolean isTakingScreenshot = false;
+
+    /**
+     * Error number from speech recognition listener. Based on this, the cause of problem can
+     * be identified.
+     */
+    private int onErrorListeningNumber = 0;
 
     /**
      * A private constructor to create only one instance.
-     * @param context Context of the main activity, used for loading resources and also
-     *                  creating instance of ARAppCamera class.
      */
-    private ARAppStereoRenderer(Context context) {
-        mContext = (ARAppActivity) context;
-
+    private ARAppStereoRenderer() {
         camera = new float[16];
-        view = new float[16];
+        cameraViewMatrix = new float[16];
     }
 
     /**
      * A public method to create a singleton instance of this class.
-     * @param context Context of the main activity, used for loading resources and also
-     *                  creating instance of ARAppCamera class.
      */
-    static void createInstance(Context context) {
-        mRenderer = new ARAppStereoRenderer(context);
+    static void createInstance() {
+        mRenderer = new ARAppStereoRenderer();
     }
 
     /**
@@ -86,10 +148,10 @@ final class ARAppStereoRenderer implements GvrView.StereoRenderer {
 
     /**
      * A method used to set surface which we will use to draw camera's input stream.
-     * @param _surface Surface used by ARAppCamera class.
+     * @param surface Surface used by ARAppCamera class.
      */
-    void setSurface(SurfaceTexture _surface) {
-        surface = _surface;
+    void setSurface(SurfaceTexture surface) {
+        mSurface = surface;
     }
 
     /**
@@ -100,19 +162,55 @@ final class ARAppStereoRenderer implements GvrView.StereoRenderer {
      *
      * @param id An id of that should be drawn.
      */
-    static void setTexture(int id) {
+    void setTexture(int id) {
         ARAppTextureLoader.resetAlpha();
-        texture = id;
+        mTexture = id;
         isLoaded = false;
     }
 
     /**
      * Method used to clear screen by setting actual texture to 0.
      */
-    static void clearTexture() {
-        texture = 0;
+    void clearTexture() {
+        mTexture = 0;
         isLoaded = false;
     }
+
+    /**
+     * Called when QR Code Scanner is turned on. Used to draw scanning line.
+     * @param value turn on or off drawing line
+     */
+    void setIsScanning(boolean value) {
+        isScanning = value;
+    }
+
+    /**
+     * Called when {@link ARAppSpeech#onError(int)} is called.
+     * @param error error number
+     * @param value turn on drawing error message
+     */
+    void setListeningError(int error, boolean value) {
+        onErrorListeningNumber = error;
+        onErrorListening = value;
+        clearTexture();
+    }
+
+    /**
+     * Called when {@link ARAppSpeech#onReadyForSpeech(Bundle)} is called.
+     * @param value draw or not draw error message
+     */
+    void setListeningError(boolean value) {
+        onErrorListening = value;
+    }
+
+    /**
+     * Called when user wants to take screenshot.
+     * @param value true or false
+     */
+    public void setIsTakingScreenshot(boolean value) {
+        isTakingScreenshot = value;
+    }
+
     /**
      * OpenGL ES 2.0 GvrView.StereoRenderer
      *
@@ -138,7 +236,7 @@ final class ARAppStereoRenderer implements GvrView.StereoRenderer {
     @Override
     public void onDrawEye(Eye eye) {
         // Apply the eye transformation to the camera.
-        Matrix.multiplyMM(view, 0, eye.getEyeView(), 0, camera, 0);
+        Matrix.multiplyMM(cameraViewMatrix, 0, eye.getEyeView(), 0, camera, 0);
 
         // First, clear OpenGL context
         float[] mtx = new float[16];
@@ -146,21 +244,21 @@ final class ARAppStereoRenderer implements GvrView.StereoRenderer {
         GLES20.glClearColor(0.0f, 200.0f, 0.0f, 1);
 
         // Update surface content with actual camera's image
-        surface.updateTexImage();
-        surface.getTransformMatrix(mtx);
+        mSurface.updateTexImage();
+        mSurface.getTransformMatrix(mtx);
 
         // Draw camera's input
         mARAppCamera.draw();
 
-        if (drawScanningLine) {
+        if (isScanning) {
             mScanningLine.draw();
         }
 
         if (!isLoaded) {
             checkError();
-            isLoaded = mARAppTextureLoader.loadTexture(texture);
+            isLoaded = mARAppTextureLoader.loadTexture(mTexture);
         } else {
-            mARAppTextureLoader.draw(mtrxProjectionAndView);
+            mARAppTextureLoader.draw(textureViewAndProjectionMatrix);
         }
     }
 
@@ -170,9 +268,9 @@ final class ARAppStereoRenderer implements GvrView.StereoRenderer {
     private void checkError() {
         if (onErrorListening) {
             if (onErrorListeningNumber != 4) { // 4 means there is no internet connection
-                texture = R.drawable.errorlistening;
+                mTexture = R.drawable.errorlistening;
             } else {
-                texture = R.drawable.errorlisteningfour;
+                mTexture = R.drawable.errorlisteningfour;
             }
         }
     }
@@ -189,7 +287,7 @@ final class ARAppStereoRenderer implements GvrView.StereoRenderer {
 
     @Override
     public void onFinishFrame(Viewport viewport) {
-        if (takeScreenshot) { // TODO ?Make sure we load proper texture takingscreenshot before
+        if (isTakingScreenshot) { // TODO ?Make sure we load proper texture takingscreenshot before
             int width = viewport.width;
             int height = viewport.height;
             int screenshotSize = width * height;
@@ -223,7 +321,7 @@ final class ARAppStereoRenderer implements GvrView.StereoRenderer {
                 e.printStackTrace();
             }
 
-            takeScreenshot = false;
+            setIsTakingScreenshot(false);
             clearTexture();
         }
     }
@@ -241,13 +339,13 @@ final class ARAppStereoRenderer implements GvrView.StereoRenderer {
     @Override
     public void onSurfaceChanged(int width, int height) {
         // Setup our screen width and height for normal sprite translation.
-        Matrix.orthoM(mtrxProjection, 0, 0f, width, 0.0f, height, 0, 100);
+        Matrix.orthoM(textureProjectionMatrix, 0, 0, width, 0, height, -1, 1);
 
         // Set the camera position (View matrix)
-        Matrix.setLookAtM(mtrxView, 0, 0f, 0f, 0.01f, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
+        Matrix.setLookAtM(textureViewMatrix, 0, 0.0f, 0.0f, CAMERA_Z, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
 
         // Calculate the projection and view transformation
-        Matrix.multiplyMM(mtrxProjectionAndView, 0, mtrxProjection, 0, mtrxView, 0);
+        Matrix.multiplyMM(textureViewAndProjectionMatrix, 0, textureProjectionMatrix, 0, textureViewMatrix, 0);
     }
 
     /**
@@ -290,7 +388,8 @@ final class ARAppStereoRenderer implements GvrView.StereoRenderer {
      * @return The context of the text file, or null in case of error.
      */
     private static String readRawTextFile(int resId) {
-        InputStream inputStream = mContext.getResources().openRawResource(resId);
+        InputStream inputStream = ARAppActivity.getARAppContext().getResources()
+                .openRawResource(resId);
         try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
             StringBuilder sb = new StringBuilder();
@@ -314,7 +413,7 @@ final class ARAppStereoRenderer implements GvrView.StereoRenderer {
      * @return The shader object handler.
      */
 
-    public static int loadShader(int type, int resId) {
+    static int loadShader(int type, int resId) {
         String code = readRawTextFile(resId);
         int shader = GLES20.glCreateShader(type);
         GLES20.glShaderSource(shader, code);
@@ -337,7 +436,4 @@ final class ARAppStereoRenderer implements GvrView.StereoRenderer {
 
         return shader;
     }
-
-
 }
-
