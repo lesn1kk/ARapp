@@ -1,11 +1,18 @@
 package lesnik.com.arapp_1;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Picture;
+import android.graphics.drawable.PictureDrawable;
 import android.hardware.Camera;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Vibrator;
+import android.util.Base64;
 import android.util.Log;
 
 import com.google.vr.sdk.base.GvrActivity;
@@ -18,6 +25,13 @@ import com.google.zxing.ReaderException;
 import com.google.zxing.Result;
 import com.google.zxing.common.HybridBinarizer;
 
+import com.larvalabs.svgandroid.SVG;
+import com.larvalabs.svgandroid.SVGParser;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
@@ -99,6 +113,7 @@ public class ARAppActivity extends GvrActivity implements IResultHandler, Camera
      * ARAppActivity is a result handler for QR code scanner, because this is the only activity.
      * Depending on the result, proper texture is set for drawing, scanner is turned off after.
      * @param mResult Contains result from decoded QR Code.
+     * TODO Send JSON to server from here, generate PNG file from SVG
      */
     @Override
     public void handleResult(Result mResult) {
@@ -119,11 +134,33 @@ public class ARAppActivity extends GvrActivity implements IResultHandler, Camera
             case "blue":
                 ARAppStereoRenderer.getInstance().setTexture(R.drawable.blue);
                 break;
+            case "convert":
+                try {
+                    convert();
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+                break;
             default:
                 break;
         }
 
         turnOffQRCodeScanner();
+    }
+
+    public void convert() throws FileNotFoundException {
+        SVG svg = SVGParser.getSVGFromResource(getResources(), R.raw.android);
+        PictureDrawable pictureDrawable = svg.createPictureDrawable();
+        Bitmap bitmap = Bitmap.createBitmap(pictureDrawable.getIntrinsicWidth(), pictureDrawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+
+        Canvas canvas = new Canvas(bitmap);
+        canvas.drawPicture(pictureDrawable.getPicture());
+
+        FileOutputStream fos = new FileOutputStream(new File(Environment
+                .getExternalStorageDirectory().toString(), "SVG"
+                + System.currentTimeMillis() + ".png"));
+
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
     }
 
     /**

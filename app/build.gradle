@@ -11,6 +11,7 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        vectorDrawables.useSupportLibrary = true
     }
     buildTypes {
         debug {
@@ -40,7 +41,10 @@ dependencies {
 
     compile 'com.android.support:appcompat-v7:24.0.0'
     compile 'com.google.protobuf.nano:protobuf-javanano:3.0.0-alpha-7'
+
+    // QR Code Scanner
     compile 'me.dm7.barcodescanner:zxing:1.8.4'
+
     compile project(':base')
     compile project(':common')
 }
