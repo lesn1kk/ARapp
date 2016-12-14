@@ -1,7 +1,5 @@
 package lesnik.com.arapp_1;
 
-import android.content.Context;
-
 import com.google.vr.sdk.base.GvrView;
 
 /**
@@ -25,7 +23,7 @@ final class ARAppView extends GvrView {
         ARAppStereoRenderer.createInstance();
         ARAppStereoRenderer mARAppRenderer = ARAppStereoRenderer.getInstance();
         setRenderer(mARAppRenderer);
-        //this.setTransitionViewEnabled(true);
+        this.setTransitionViewEnabled(true);
     }
 
     /**

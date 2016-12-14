@@ -14,16 +14,17 @@ import java.nio.ShortBuffer;
  * Setup and prepares OpenGL program for drawing texture.
  */
 @SuppressWarnings("FieldCanBeLocal")
-final class ARAppTextureLoader {
+final class ARAppTextureManager {
 
     /**
-     * We have to create the vertices of our triangle. This is actually size. X, Y, Z.
+     * We have to create the vertices of our screen. This is actually size. X, Y, Z.
      */
     private float[] screenVertices = new float[] {
-            0.0f, 480f, 0.0f,
-            0.0f, 0.0f, 0.0f,
-            640f, 0.0f, 0.0f,
-            640f, 480f, 0.0f};
+            -1.0f, 1.0f, 0.0f,
+            -1.0f, -1.0f, 0.0f,
+            1.0f, -1.0f, 0.0f,
+            1.0f, 1.0f, 0.0f
+    };
 
     /**
      * OpenGL ES 2.0
@@ -70,7 +71,7 @@ final class ARAppTextureLoader {
     /**
      * Singleton instance of this class.
      */
-    private static ARAppTextureLoader mARAppTextureLoader;
+    private static ARAppTextureManager mARAppTextureManager;
 
     /**
      * Used for making fade effect.
@@ -85,7 +86,7 @@ final class ARAppTextureLoader {
     /**
      * Constructor, setup and prepares OpenGL.
      */
-    private ARAppTextureLoader() {
+    private ARAppTextureManager() {
         mTexture = createTexture();
 
         // The vertex buffer.
@@ -128,15 +129,15 @@ final class ARAppTextureLoader {
      * Creates singleton instance of this class.
      */
     static void createInstance() {
-        mARAppTextureLoader = new ARAppTextureLoader();
+        mARAppTextureManager = new ARAppTextureManager();
     }
 
     /**
      * Returns instance of this class.
      * @return This class
      */
-    static ARAppTextureLoader getInstance() {
-        return mARAppTextureLoader;
+    static ARAppTextureManager getInstance() {
+        return mARAppTextureManager;
     }
 
     /**

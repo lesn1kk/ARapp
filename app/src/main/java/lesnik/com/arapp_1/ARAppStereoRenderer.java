@@ -1,6 +1,5 @@
 package lesnik.com.arapp_1;
 
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.SurfaceTexture;
 import android.opengl.GLES20;
@@ -42,18 +41,18 @@ final class ARAppStereoRenderer implements GvrView.StereoRenderer {
     /**
      * View and projection matrix.
      */
-    private final float[] textureViewAndProjectionMatrix = new float[16];
+    private final float[] textureMatrix = new float[16];
 
     /**
      * These matrices are used to properly draw a camera's input image.
      * Projection matrix.
      */
-    private float[] cameraViewMatrix;
+    //private float[] cameraViewMatrix;
 
     /**
      * Variable used to apply transformation to camera matrix.
      */
-    private float[] camera;
+    //private float[] cameraMatrix;
 
     /**
      * Instance of ARAppCamera class.
@@ -79,7 +78,7 @@ final class ARAppStereoRenderer implements GvrView.StereoRenderer {
     /**
      * Instance of texture loader class.
      */
-    private static ARAppTextureLoader mARAppTextureLoader;
+    private static ARAppTextureManager mARAppTextureManager;
 
     /**
      * This clss tag, used in debug logging.
@@ -100,7 +99,7 @@ final class ARAppStereoRenderer implements GvrView.StereoRenderer {
      * Because loading of texture takes time and causes lag, to avoid this make sure texture is
      * only loaded once.
      */
-    private boolean isLoaded = false;
+    private boolean isTextureLoaded = false;
 
     /**
      * Texture id to draw.
@@ -127,8 +126,8 @@ final class ARAppStereoRenderer implements GvrView.StereoRenderer {
      * A private constructor to create only one instance.
      */
     private ARAppStereoRenderer() {
-        camera = new float[16];
-        cameraViewMatrix = new float[16];
+        //cameraMatrix = new float[16];
+        //cameraViewMatrix = new float[16];
     }
 
     /**
@@ -157,15 +156,15 @@ final class ARAppStereoRenderer implements GvrView.StereoRenderer {
     /**
      * This method is called from outside this class everytime we need to change the actual texture
      * we are drawing. This is used by ARAppSpeech, which set textures id when such command is
-     * recognized, or by ARAppQRCodeScanner, when some qr code is decoded and new texture with
+     * recognized, or by ARAppQRCodeScanner, when some qr code is decoded and new texture
      * needs to be drawn.
      *
      * @param id An id of that should be drawn.
      */
     void setTexture(int id) {
-        ARAppTextureLoader.resetAlpha();
+        ARAppTextureManager.resetAlpha();
         mTexture = id;
-        isLoaded = false;
+        isTextureLoaded = false;
     }
 
     /**
@@ -173,7 +172,7 @@ final class ARAppStereoRenderer implements GvrView.StereoRenderer {
      */
     void clearTexture() {
         mTexture = 0;
-        isLoaded = false;
+        isTextureLoaded = false;
     }
 
     /**
@@ -207,7 +206,7 @@ final class ARAppStereoRenderer implements GvrView.StereoRenderer {
      * Called when user wants to take screenshot.
      * @param value true or false
      */
-    public void setIsTakingScreenshot(boolean value) {
+    void setIsTakingScreenshot(boolean value) {
         isTakingScreenshot = value;
     }
 
@@ -215,14 +214,13 @@ final class ARAppStereoRenderer implements GvrView.StereoRenderer {
      * OpenGL ES 2.0 GvrView.StereoRenderer
      *
      * This method is called every time new frame appears.
-     *
+     * Builds the camera matrix and apply it to the ModelView.
      * @param headTransform The head transformation in the new frame.
      *                      Describes the head transform independently of any eye parameters.
      */
     @Override
     public void onNewFrame(HeadTransform headTransform) {
-        // Build the camera matrix and apply it to the ModelView.
-        Matrix.setLookAtM(camera, 0, 0.0f, 0.0f, CAMERA_Z, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
+        //Matrix.setLookAtM(cameraMatrix, 0, 0.0f, 0.0f, CAMERA_Z, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
     }
 
     /**
@@ -231,49 +229,32 @@ final class ARAppStereoRenderer implements GvrView.StereoRenderer {
      * This method is called every time an eye is drawn. In other words, when stereo mode is enabled
      * this is called two times for every frame. If stereo mode is disabled, it is called only once.
      *
+     * First, clear OpenGL context.
+     * Then update surface content with actual camera's image.
+     * And then draw everything.
      * @param eye Requests to draw the contents from the point of view of an eye.
      */
     @Override
     public void onDrawEye(Eye eye) {
-        // Apply the eye transformation to the camera.
-        Matrix.multiplyMM(cameraViewMatrix, 0, eye.getEyeView(), 0, camera, 0);
-
-        // First, clear OpenGL context
-        float[] mtx = new float[16];
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
         GLES20.glClearColor(0.0f, 200.0f, 0.0f, 1);
 
-        // Update surface content with actual camera's image
         mSurface.updateTexImage();
-        mSurface.getTransformMatrix(mtx);
 
-        // Draw camera's input
         mARAppCamera.draw();
 
         if (isScanning) {
             mScanningLine.draw();
         }
 
-        if (!isLoaded) {
+        if (!isTextureLoaded) {
             checkError();
-            isLoaded = mARAppTextureLoader.loadTexture(mTexture);
+            isTextureLoaded = mARAppTextureManager.loadTexture(mTexture);
         } else {
-            mARAppTextureLoader.draw(textureViewAndProjectionMatrix);
+            mARAppTextureManager.draw(textureMatrix);
         }
     }
 
-    /**
-     * Method that checks if speech recognition throws error. Error 4 means no internet connection.
-     */
-    private void checkError() {
-        if (onErrorListening) {
-            if (onErrorListeningNumber != 4) { // 4 means there is no internet connection
-                mTexture = R.drawable.errorlistening;
-            } else {
-                mTexture = R.drawable.errorlisteningfour;
-            }
-        }
-    }
     /**
      * OpenGL ES 2.0 GvrView.StereoRenderer
      *
@@ -284,7 +265,6 @@ final class ARAppStereoRenderer implements GvrView.StereoRenderer {
      *
      * @param viewport Viewport of the full GL surface. Automatically set before this call.
      */
-
     @Override
     public void onFinishFrame(Viewport viewport) {
         if (isTakingScreenshot) { // TODO ?Make sure we load proper texture takingscreenshot before
@@ -332,27 +312,23 @@ final class ARAppStereoRenderer implements GvrView.StereoRenderer {
      * This is called for example then device orientation was changed. In this app case, this
      * is called only once, because orientation is always horizontal. Because it contains
      * information about screen width and screen height, it is used to setup matrices.
+     * Setup our screen width and height for normal sprite translation.
      *
      * @param width Screen width
      * @param height Screen height
      */
     @Override
     public void onSurfaceChanged(int width, int height) {
-        // Setup our screen width and height for normal sprite translation.
-        Matrix.orthoM(textureProjectionMatrix, 0, 0, width, 0, height, -1, 1);
-
-        // Set the camera position (View matrix)
-        Matrix.setLookAtM(textureViewMatrix, 0, 0.0f, 0.0f, CAMERA_Z, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
-
-        // Calculate the projection and view transformation
-        Matrix.multiplyMM(textureViewAndProjectionMatrix, 0, textureProjectionMatrix, 0, textureViewMatrix, 0);
+        float aspectRatio = (float) width / (float) height;
+        Matrix.orthoM(textureMatrix, 0, -aspectRatio, aspectRatio, -1, 1, -1, 1);
+       // Matrix.orthoM(textureMatrix, 0, 0, width, 0, height, 0, 0);
     }
 
     /**
      * OpenGL ES 2.0 GvrView.StereoRenderer
      *
      * This is called when OpenGL context is created, only once. Good place to setup all of used
-     * classes. Set local instances of ARAppCamera and ARAppTextureLoader to have access to their
+     * classes. Set local instances of ARAppCamera and ARAppTextureManager to have access to their
      * draw methods.
      *
      * @param eglConfig Unused
@@ -365,8 +341,8 @@ final class ARAppStereoRenderer implements GvrView.StereoRenderer {
 
         mScanningLine = new ARAppQRCodeScanner();
 
-        ARAppTextureLoader.createInstance();
-        mARAppTextureLoader = ARAppTextureLoader.getInstance();
+        ARAppTextureManager.createInstance();
+        mARAppTextureManager = ARAppTextureManager.getInstance();
     }
 
     /**
@@ -378,9 +354,21 @@ final class ARAppStereoRenderer implements GvrView.StereoRenderer {
      */
     @Override
     public void onRendererShutdown() {
-
+        clearTexture();
     }
 
+    /**
+     * Method that checks if speech recognition throws error. Error 4 means no internet connection.
+     */
+    private void checkError() {
+        if (onErrorListening) {
+            if (onErrorListeningNumber != 4) {
+                mTexture = R.drawable.errorlistening;
+            } else {
+                mTexture = R.drawable.errorlisteningfour;
+            }
+        }
+    }
     /**
      * Converts a raw text file into a string.
      *

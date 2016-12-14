@@ -1,6 +1,5 @@
 package lesnik.com.arapp_1;
 
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.speech.RecognitionListener;
@@ -54,6 +53,13 @@ final class ARAppSpeech implements RecognitionListener {
         mSpeechRecognizer.setRecognitionListener(this);
     }
 
+    void onStop() {
+        mSpeechRecognizer.cancel();
+    }
+
+    void onDestroy() {
+        mSpeechRecognizer.destroy();
+    }
     /**
      * Starts listening for voice commands.
      */
@@ -117,7 +123,7 @@ final class ARAppSpeech implements RecognitionListener {
     public void onError(int i) {
         Log.e(mTag, "onError " + i);
         ARAppStereoRenderer.getInstance().setListeningError(i, true);
-        ARAppTextureLoader.resetAlpha();
+        ARAppTextureManager.resetAlpha();
     }
 
     /**

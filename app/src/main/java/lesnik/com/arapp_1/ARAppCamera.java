@@ -60,6 +60,21 @@ final class ARAppCamera {
      * |                |
      * |                |
      * |-1,-1       1,-1|
+     * These are two triangles that will be used to draw.
+     *
+     * First triangle
+     * |*  *  *  *  *|
+     * |   *        *|
+     * |      *     *|
+     * |         *  *|
+     * |            *|
+     *
+     * Second triangle
+     * |*            |
+     * |*  *         |
+     * |*     *      |
+     * |*        *   |
+     * |*  *  *  *  *|
      */
     private float[] screenVertices = {
             -1.0F, 1.0F,
@@ -68,7 +83,8 @@ final class ARAppCamera {
 
             1.0F, -1.0F,
             -1.0F, -1.0F,
-            -1.0F, 1.0F};
+            -1.0F, 1.0F
+    };
 
     /**
      * OpenGL ES 2.0
@@ -77,6 +93,23 @@ final class ARAppCamera {
      * |               |
      * |               |
      * |0, 0       1, 0|
+     * These are two triangles that will be used to draw.
+     * These triangles are the triangles from screenVertices rotated 90 degrees, because we
+     * work in landscape orientation.
+     *
+     * * First triangle
+     * |            *|
+     * |         *  *|
+     * |      *     *|
+     * |   *        *|
+     * |*  *  *  *  *|
+     *
+     * Second triangle
+     * |*  *  *  *  *|
+     * |*        *   |
+     * |*     *      |
+     * |*  *         |
+     * |*            |
      */
     private float[] textureVertices = {
             0.0F, 0.0F,
@@ -85,7 +118,8 @@ final class ARAppCamera {
 
             1.0F, 1.0F,
             0.0F, 1.0F,
-            0.0F, 0.0F};
+            0.0F, 0.0F
+    };
 
     /**
      * OpenGL ES 2.0
@@ -138,8 +172,6 @@ final class ARAppCamera {
      * Creates empty OpenGL ES program.
      * Loads shaders to OpenGL and adds them to this class program. glLinkProgram is called to
      * make possible communication between vertex and fragment shaders.
-     *
-     * TODO Explain why ByteBuffer
      */
     private ARAppCamera() {
         mTexture = createTexture();
