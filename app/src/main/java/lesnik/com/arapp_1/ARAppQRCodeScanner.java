@@ -165,3 +165,4 @@ final class ARAppQRCodeScanner {
         }
     }
 }
+

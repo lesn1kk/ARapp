@@ -53,12 +53,12 @@ public class ARAppActivity extends GvrActivity implements IResultHandler, Camera
     /**
      * Constant value used to recognize permission request.
      */
-    private final static int PERMISSIONS_GRANTED = 1;
+    private static final int PERMISSIONS_GRANTED = 1;
 
     /**
      * List containing all necessary application permissions, used to ask user about them.
      */
-    private final static ArrayList<String> permissionsList = new ArrayList<String>() {{
+    private static final  ArrayList<String> permissionsList = new ArrayList<String>() {{
         add(Manifest.permission.CAMERA);
         add(Manifest.permission.RECORD_AUDIO);
         add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
@@ -136,12 +136,12 @@ public class ARAppActivity extends GvrActivity implements IResultHandler, Camera
      */
     public void askForPermissions() {
         if (checkSelfPermission(Manifest.permission.CAMERA)
-                != PackageManager.PERMISSION_GRANTED ||
-                checkSelfPermission(Manifest.permission.VIBRATE)
-                != PackageManager.PERMISSION_GRANTED ||
-                checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED ||
-                checkSelfPermission(Manifest.permission.RECORD_AUDIO)
+                != PackageManager.PERMISSION_GRANTED
+                || checkSelfPermission(Manifest.permission.VIBRATE)
+                != PackageManager.PERMISSION_GRANTED
+                || checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED
+                || checkSelfPermission(Manifest.permission.RECORD_AUDIO)
                 != PackageManager.PERMISSION_GRANTED) {
 
             requestPermissions(permissionsList.toArray(new String[permissionsList.size()]),
@@ -162,11 +162,11 @@ public class ARAppActivity extends GvrActivity implements IResultHandler, Camera
      */
     @Override
     public void onRequestPermissionsResult(int requestCode,
-                                           String permissions[], int[] grantResults) {
+                                           String[] permissions, int[] grantResults) {
         boolean hasRequiredPermissions = true;
         switch (requestCode) {
-            case PERMISSIONS_GRANTED: {
-                for(int x:grantResults) {
+            case PERMISSIONS_GRANTED:
+                for (int x:grantResults) {
                     if (x == -1) {
                         hasRequiredPermissions = false;
                         break;
@@ -188,7 +188,7 @@ public class ARAppActivity extends GvrActivity implements IResultHandler, Camera
                         }
                     }.start();
                 }
-            }
+            default: break;
         }
     }
 
@@ -231,10 +231,15 @@ public class ARAppActivity extends GvrActivity implements IResultHandler, Camera
         turnOffQRCodeScanner();
     }
 
+    /**
+     * This method will be used to convert svg format image to png, to make it easy drawable.
+     * @throws FileNotFoundException exception
+     */
     public void convert() throws FileNotFoundException {
         SVG svg = SVGParser.getSVGFromResource(getResources(), R.raw.android);
         PictureDrawable pictureDrawable = svg.createPictureDrawable();
-        Bitmap bitmap = Bitmap.createBitmap(pictureDrawable.getIntrinsicWidth(), pictureDrawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+        Bitmap bitmap = Bitmap.createBitmap(pictureDrawable.getIntrinsicWidth(),
+                pictureDrawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
 
         Canvas canvas = new Canvas(bitmap);
         canvas.drawPicture(pictureDrawable.getPicture());

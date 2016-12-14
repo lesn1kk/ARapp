@@ -237,3 +237,4 @@ final class ARAppTextureManager {
         GLES20.glDisableVertexAttribArray(mTexCoordinatesLoc);
     }
 }
+

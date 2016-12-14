@@ -86,11 +86,6 @@ final class ARAppStereoRenderer implements GvrView.StereoRenderer {
     private static final String mTag = "ARAppStereoRenderer";
 
     /**
-     * Value used in calculation of view matrix.
-     */
-    private static final float CAMERA_Z = 0.01f;
-
-    /**
      * If true, draw scanning line.
      */
     private boolean isScanning = false;
@@ -214,13 +209,11 @@ final class ARAppStereoRenderer implements GvrView.StereoRenderer {
      * OpenGL ES 2.0 GvrView.StereoRenderer
      *
      * This method is called every time new frame appears.
-     * Builds the camera matrix and apply it to the ModelView.
      * @param headTransform The head transformation in the new frame.
      *                      Describes the head transform independently of any eye parameters.
      */
     @Override
     public void onNewFrame(HeadTransform headTransform) {
-        //Matrix.setLookAtM(cameraMatrix, 0, 0.0f, 0.0f, CAMERA_Z, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
     }
 
     /**
@@ -321,7 +314,6 @@ final class ARAppStereoRenderer implements GvrView.StereoRenderer {
     public void onSurfaceChanged(int width, int height) {
         float aspectRatio = (float) width / (float) height;
         Matrix.orthoM(textureMatrix, 0, -aspectRatio, aspectRatio, -1, 1, -1, 1);
-       // Matrix.orthoM(textureMatrix, 0, 0, width, 0, height, 0, 0);
     }
 
     /**

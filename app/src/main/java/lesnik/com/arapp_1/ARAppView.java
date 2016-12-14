@@ -41,4 +41,3 @@ final class ARAppView extends GvrView {
         return mARAppView;
     }
 }
-

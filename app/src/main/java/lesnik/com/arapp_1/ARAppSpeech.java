@@ -49,14 +49,23 @@ final class ARAppSpeech implements RecognitionListener {
      * boolean check = SpeechRecognizer.isRecognitionAvailable(mContext);
      */
     void init() {
-        mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(ARAppActivity.getARAppContext());
+        mSpeechRecognizer =
+                SpeechRecognizer.createSpeechRecognizer(ARAppActivity.getARAppContext());
         mSpeechRecognizer.setRecognitionListener(this);
     }
 
+    /**
+     * Android activity life cycle, called from onStop.
+     * Cancels speech recognition service.
+     */
     void onStop() {
         mSpeechRecognizer.cancel();
     }
 
+    /**
+     * Android activity life cycle, called from onDestroy.
+     * Destroys speech recognition service.
+     */
     void onDestroy() {
         mSpeechRecognizer.destroy();
     }

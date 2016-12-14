@@ -319,3 +319,4 @@ final class ARAppCamera {
         }
     }
 }
+
