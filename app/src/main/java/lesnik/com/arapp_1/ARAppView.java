@@ -5,7 +5,7 @@ import com.google.vr.sdk.base.GvrView;
 /**
  * Prepares view.
  */
-final class ARAppView extends GvrView {
+class ARAppView extends GvrView {
 
     /**
      * Singleton instance of this class.

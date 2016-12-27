@@ -25,34 +25,12 @@ import java.nio.ByteOrder;
  * Class implementing GvrView.StereoRenderer, wrapped OpenGL ES 2.0 from google virtual kit library.
  * It is responsible for setting OpenGL context, setting up the program and drawing everything.
  */
-final class ARAppStereoRenderer implements GvrView.StereoRenderer {
-
-    /**
-     * These matrices are used to properly draw a texture/
-     * Projection matrix.
-     */
-    private final float[] textureProjectionMatrix = new float[16];
-
-    /**
-     * View matrix.
-     */
-    private final float[] textureViewMatrix = new float[16];
+class ARAppStereoRenderer implements GvrView.StereoRenderer {
 
     /**
      * View and projection matrix.
      */
     private final float[] textureMatrix = new float[16];
-
-    /**
-     * These matrices are used to properly draw a camera's input image.
-     * Projection matrix.
-     */
-    //private float[] cameraViewMatrix;
-
-    /**
-     * Variable used to apply transformation to camera matrix.
-     */
-    //private float[] cameraMatrix;
 
     /**
      * Instance of ARAppCamera class.
@@ -121,8 +99,6 @@ final class ARAppStereoRenderer implements GvrView.StereoRenderer {
      * A private constructor to create only one instance.
      */
     private ARAppStereoRenderer() {
-        //cameraMatrix = new float[16];
-        //cameraViewMatrix = new float[16];
     }
 
     /**
@@ -150,7 +126,7 @@ final class ARAppStereoRenderer implements GvrView.StereoRenderer {
 
     /**
      * This method is called from outside this class everytime we need to change the actual texture
-     * we are drawing. This is used by ARAppSpeech, which set textures id when such command is
+     * we are drawing. This is used by ARAppSpeechRecognition, which set textures id when such command is
      * recognized, or by ARAppQRCodeScanner, when some qr code is decoded and new texture
      * needs to be drawn.
      *
@@ -179,7 +155,7 @@ final class ARAppStereoRenderer implements GvrView.StereoRenderer {
     }
 
     /**
-     * Called when {@link ARAppSpeech#onError(int)} is called.
+     * Called when {@link ARAppSpeechRecognition#onError(int)} is called.
      * @param error error number
      * @param value turn on drawing error message
      */
@@ -190,7 +166,7 @@ final class ARAppStereoRenderer implements GvrView.StereoRenderer {
     }
 
     /**
-     * Called when {@link ARAppSpeech#onReadyForSpeech(Bundle)} is called.
+     * Called when {@link ARAppSpeechRecognition#onReadyForSpeech(Bundle)} is called.
      * @param value draw or not draw error message
      */
     void setListeningError(boolean value) {
@@ -236,15 +212,15 @@ final class ARAppStereoRenderer implements GvrView.StereoRenderer {
 
         mARAppCamera.draw();
 
-        if (isScanning) {
-            mScanningLine.draw();
-        }
-
         if (!isTextureLoaded) {
             checkError();
             isTextureLoaded = mARAppTextureManager.loadTexture(mTexture);
         } else {
             mARAppTextureManager.draw(textureMatrix);
+        }
+
+        if (isScanning) {
+            mScanningLine.draw();
         }
     }
 
@@ -306,7 +282,7 @@ final class ARAppStereoRenderer implements GvrView.StereoRenderer {
      * is called only once, because orientation is always horizontal. Because it contains
      * information about screen width and screen height, it is used to setup matrices.
      * Setup our screen width and height for normal sprite translation.
-     *
+     * TODO Consider applying this matrix to ARAppCamera
      * @param width Screen width
      * @param height Screen height
      */

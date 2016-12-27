@@ -27,13 +27,13 @@
 //    @BeforeClass
 //    public static void setup() {
 //        ARAppView.createInstance(getTargetContext());
-//        ARAppSpeech m = ARAppSpeech.getInstance();
+//        ARAppSpeechRecognition m = ARAppSpeechRecognition.getInstance();
 //        m.init(getTargetContext());
 //    }
 //    @Test
 //    public void testOnCreate() throws NoSuchFieldException, IllegalAccessException {
 //        assertThat("ARAppView should be created", ARAppView.getInstance(), is(notNullValue()));
-//        assertThat("ARAppSpeech should be created and initialized", ARAppSpeech.getInstance(),
+//        assertThat("ARAppSpeechRecognition should be created and initialized", ARAppSpeechRecognition.getInstance(),
 //                is(notNullValue()));
 //    }
 //

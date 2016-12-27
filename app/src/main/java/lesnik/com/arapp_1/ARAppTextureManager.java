@@ -14,10 +14,15 @@ import java.nio.ShortBuffer;
  * Setup and prepares OpenGL program for drawing texture.
  */
 @SuppressWarnings("FieldCanBeLocal")
-final class ARAppTextureManager {
+class ARAppTextureManager {
 
     /**
-     * We have to create the vertices of our screen. This is actually size. X, Y, Z.
+     * We have to create the vertices of our screen. X, Y, Z. Drawing this texture is different
+     * than drawing Camera's images, but in the end, the result is the same.
+     * |-1, 1       1, 1|
+     * |                |
+     * |                |
+     * |-1,-1       1,-1|
      */
     private float[] screenVertices = new float[] {
             -1.0f, 1.0f, 0.0f,
@@ -111,9 +116,6 @@ final class ARAppTextureManager {
         textureVerticesBuffer.position(0);
 
         // Enable transparency
-        GLES20.glEnable(GLES20.GL_BLEND);
-        GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-
         int vertexShader = ARAppStereoRenderer.loadShader(GLES20.GL_VERTEX_SHADER,
                 R.raw.texture_vertex);
         int fragmentShader = ARAppStereoRenderer.loadShader(GLES20.GL_FRAGMENT_SHADER,
@@ -205,6 +207,11 @@ final class ARAppTextureManager {
     void draw(float[] textureViewAndProjectionMatrix) {
         GLES20.glUseProgram(mProgram);
 
+        GLES20.glActiveTexture(GLES20.GL_TEXTURE1);
+
+        GLES20.glEnable(GLES20.GL_BLEND);
+        GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+
         int mPositionHandle = GLES20.glGetAttribLocation(mProgram, "vPosition");
         GLES20.glEnableVertexAttribArray(mPositionHandle);
         GLES20.glVertexAttribPointer(mPositionHandle, 3, GLES20.GL_FLOAT, false, 0,
@@ -221,7 +228,7 @@ final class ARAppTextureManager {
         int mSamplerLoc = GLES20.glGetUniformLocation(mProgram, "s_texture");
         GLES20.glUniform1i(mSamplerLoc, mTexture);
 
-        if (mAlpha < 1.0f) {
+        if (mAlpha < 0.8f) {
             mAlpha += 0.01f;
         }
 
@@ -235,6 +242,7 @@ final class ARAppTextureManager {
         // Disable vertex array
         GLES20.glDisableVertexAttribArray(mPositionHandle);
         GLES20.glDisableVertexAttribArray(mTexCoordinatesLoc);
+        //GLES20.glDisable(GLES20.GL_BLEND);
     }
 }
 

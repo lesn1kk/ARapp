@@ -99,7 +99,7 @@ public class ARAppActivity extends GvrActivity implements IResultHandler, Camera
      * Local instance of speech recognition service. Used to initialize recognition service when
      * application starts.
      */
-    private ARAppSpeech mARAppSpeech;
+    private ARAppSpeechRecognition mARAppSpeechRecognition;
 
     /**
      * Creating main and only activity context of this application. ARAppView is setup here,
@@ -124,8 +124,8 @@ public class ARAppActivity extends GvrActivity implements IResultHandler, Camera
 
         initMultiFormatReader();
 
-        mARAppSpeech = ARAppSpeech.getInstance();
-        mARAppSpeech.init();
+        mARAppSpeechRecognition = ARAppSpeechRecognition.getInstance();
+        mARAppSpeechRecognition.init();
 
         setContentView(ARAppView.getInstance());
     }
@@ -273,8 +273,8 @@ public class ARAppActivity extends GvrActivity implements IResultHandler, Camera
     public void onStop() {
         super.onStop();
 
-        if (ARAppSpeech.getInstance() != null) {
-            ARAppSpeech.getInstance().onStop();
+        if (ARAppSpeechRecognition.getInstance() != null) {
+            ARAppSpeechRecognition.getInstance().onStop();
         }
     }
 
@@ -286,7 +286,7 @@ public class ARAppActivity extends GvrActivity implements IResultHandler, Camera
         super.onDestroy();
 
         if (ARAppView.getInstance() != null) {
-            ARAppSpeech.getInstance().onDestroy();
+            ARAppSpeechRecognition.getInstance().onDestroy();
         }
         if (ARAppCamera.getInstance() != null) {
             ARAppCamera.getCamera().release();
@@ -304,7 +304,7 @@ public class ARAppActivity extends GvrActivity implements IResultHandler, Camera
 
         mVibrator.vibrate(50);
         ARAppCamera.focusCamera();
-        mARAppSpeech.startListening();
+        mARAppSpeechRecognition.startListening();
     }
 
     /**

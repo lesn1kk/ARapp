@@ -5,4 +5,5 @@ uniform float alpha; // this variable contains actual alpha value
 
 void main() {
     gl_FragColor = texture2D(s_texture,v_texCoord) * alpha;
+    //gl_FragColor = vec4(v_texCoord, 0.0, 1.0);
 }

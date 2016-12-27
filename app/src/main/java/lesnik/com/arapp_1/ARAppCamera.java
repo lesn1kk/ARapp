@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.util.List;
 
 import javax.microedition.khronos.opengles.GL10;
 
@@ -17,7 +18,7 @@ import javax.microedition.khronos.opengles.GL10;
  * Class responsible for setting up camera's hardware and drawing its input on screen.
  */
 @SuppressWarnings("FieldCanBeLocal, deprecation")
-final class ARAppCamera {
+class ARAppCamera {
 
     /**
      * Class TAG, used to log data.
@@ -60,7 +61,7 @@ final class ARAppCamera {
      * |                |
      * |                |
      * |-1,-1       1,-1|
-     * These are two triangles that will be used to draw.
+     * These are two triangles that will be used to draw our texture.
      *
      * First triangle
      * |*  *  *  *  *|
@@ -138,7 +139,7 @@ final class ARAppCamera {
      * then in ARAppStereoRenderer, it is used to create a surface, which will be used for
      * camera input stream
      */
-    private int mTexture;
+    public static int mTexture;
 
     /**
      * Method used to create a proper texture for OpenGL.
@@ -267,20 +268,20 @@ final class ARAppCamera {
         try {
             mCamera.setPreviewTexture(surface);
             mCamera.setPreviewCallback(ARAppActivity.getARAppContext());
-            //set camera to continually auto-focus
+
             Camera.Parameters params = mCamera.getParameters();
-            //*EDIT*//params.setFocusMode("continuous-picture");
-            //It is better to use defined constraints as opposed to String, thanks to AbdelHady
+            List<int[]> list = params.getSupportedPreviewFpsRange();
+            int minFps = 0, maxFps = 0;
+            for (int[] x:list) {
+                if (x[0] > minFps || x[1] > maxFps) {
+                    minFps = x[0];
+                    maxFps = x[1];
+                }
+            }
+
             params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
-
-//            List<int[]> list = params.getSupportedPreviewFpsRange();
-//            params.setPreviewFrameRate(30);
-//            params.setWhiteBalance(Camera.Parameters.WHITE_BALANCE_CLOUDY_DAYLIGHT);
-//            params.setPreviewFpsRange(1000,30000);
-//            params.getPictureSize();
-
-            //params.setPictureSize(1920,1080);
             params.setPreviewSize(1280, 720);
+            params.setPreviewFpsRange(minFps, maxFps);
 
             mCamera.setParameters(params);
             mCamera.startPreview();

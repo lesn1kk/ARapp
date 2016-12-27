@@ -9,7 +9,7 @@ import java.nio.FloatBuffer;
 /**
  * Class responsible for drawing 'scanning line' and preparing OpenGL for it.
  */
-final class ARAppQRCodeScanner {
+class ARAppQRCodeScanner {
 
     /**
      * Main OpenGL program.
@@ -58,6 +58,7 @@ final class ARAppQRCodeScanner {
      * Matrix which is added to actual line position every time it is drawn, to make it move.
      */
     // TODO Figure out how it works, the last one is Z I believe
+    // TODO Use Matrix to modify model position like in onSurfaceChaned in StereoRenderer
     private float[] lineMatrix = {
             0.0f, 0.0f,
             0.0f, 1.0f};

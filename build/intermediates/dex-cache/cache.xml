@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<items version="2" >
+
+    <item
+        is-multidex="true"
+        jar="G:\Praca_Inzynierska\ARAppGitRepo\ARapp\app\build\intermediates\incremental-runtime-classes\debug\instant-run.jar"
+        jumboMode="true"
+        optimize="true"
+        revision="24.0.0"
+        sha1="5be9e1e6a288dd851f87515609eab6c5de31bb1e">
+        <dex dex="G:\Praca_Inzynierska\ARAppGitRepo\ARapp\app\build\intermediates\transforms\dex\debug\folders\1000\10\instant-run_57da52a81dc1ead62ff2b7319d87231c26462d23\classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="G:\Praca_Inzynierska\ARAppGitRepo\ARapp\app\build\intermediates\exploded-aar\com.android.support\support-vector-drawable\24.0.0\jars\classes.jar"
+        jumboMode="true"
+        optimize="true"
+        revision="24.0.0"
+        sha1="3bd97cfefd783e9de1dd1c30574a6adb44b4409b">
+        <dex dex="G:\Praca_Inzynierska\ARAppGitRepo\ARapp\app\build\intermediates\transforms\dex\debug\folders\1000\10\com.android.support-support-vector-drawable-24.0.0_cc3364e5911aa150024773016554e3e5c5cb5f3e\classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="G:\Android\Sdk\extras\android\m2repository\com\android\support\support-annotations\24.0.0\support-annotations-24.0.0.jar"
+        jumboMode="true"
+        optimize="true"
+        revision="24.0.0"
+        sha1="2943c74db6d4346ab8c6531adac91fa05c137c40">
+        <dex dex="G:\Praca_Inzynierska\ARAppGitRepo\ARapp\app\build\intermediates\transforms\dex\debug\folders\1000\10\support-annotations-24.0.0_2b2999c9681253d0a070ce125714ee3e7cdaa3d3\classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="G:\Praca_Inzynierska\ARAppGitRepo\ARapp\app\build\intermediates\exploded-aar\com.android.support\support-v4\24.0.0\jars\classes.jar"
+        jumboMode="true"
+        optimize="true"
+        revision="24.0.0"
+        sha1="2f7e6e2dad1bccaf68a8820820adc6c0d5b96d37">
+        <dex dex="G:\Praca_Inzynierska\ARAppGitRepo\ARapp\app\build\intermediates\transforms\dex\debug\folders\1000\10\com.android.support-support-v4-24.0.0_424b42d8770a0c6349aa210f9206270edcad5b35\classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="G:\Praca_Inzynierska\ARAppGitRepo\ARapp\app\build\intermediates\exploded-aar\me.dm7.barcodescanner\zxing\1.8.4\jars\classes.jar"
+        jumboMode="true"
+        optimize="true"
+        revision="24.0.0"
+        sha1="68ef1daf85c69fca8fddf7bbb947fc51cc9f8ca3">
+        <dex dex="G:\Praca_Inzynierska\ARAppGitRepo\ARapp\app\build\intermediates\transforms\dex\debug\folders\1000\10\me.dm7.barcodescanner-zxing-1.8.4_3f424df436d9ab281a7fd5f73324d4a322673cc3\classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="G:\Praca_Inzynierska\ARAppGitRepo\ARapp\app\libs\svg-android-1.1.jar"
+        jumboMode="true"
+        optimize="true"
+        revision="24.0.0"
+        sha1="9f7c80e87e9925b691875dc9388869d87515f7d2">
+        <dex dex="G:\Praca_Inzynierska\ARAppGitRepo\ARapp\app\build\intermediates\transforms\dex\debug\folders\1000\2\svg-android-1.1_87e152aac143ce713a4250d764eb0f7bc960c53d\classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="G:\Praca_Inzynierska\ARAppGitRepo\ARapp\app\build\intermediates\exploded-aar\com.android.support\support-v4\24.0.0\jars\libs\internal_impl-24.0.0.jar"
+        jumboMode="true"
+        optimize="true"
+        revision="24.0.0"
+        sha1="fcaf463e10e69c1923ccf1edeba3b4196d239e00">
+        <dex dex="G:\Praca_Inzynierska\ARAppGitRepo\ARapp\app\build\intermediates\transforms\dex\debug\folders\1000\10\internal_impl-24.0.0_e518764a0885739bed1835219df274b465c17639\classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="C:\Users\Lesnik\.gradle\caches\modules-2\files-2.1\com.google.zxing\core\3.2.1\2287494d4f5f9f3a9a2bb6980e3f32053721b315\core-3.2.1.jar"
+        jumboMode="true"
+        optimize="true"
+        revision="24.0.0"
+        sha1="2287494d4f5f9f3a9a2bb6980e3f32053721b315">
+        <dex dex="G:\Praca_Inzynierska\ARAppGitRepo\ARapp\app\build\intermediates\transforms\dex\debug\folders\1000\10\core-3.2.1_a2ff94e7ba197d397e4a0421c0fdae0b59f2bbdf\classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="G:\Praca_Inzynierska\ARAppGitRepo\ARapp\app\build\intermediates\incremental-classes\debug\instant-run-bootstrap.jar"
+        jumboMode="true"
+        optimize="true"
+        revision="24.0.0"
+        sha1="3da4e598aec6ac33308c92bc3f254549cc91eee9">
+        <dex dex="G:\Praca_Inzynierska\ARAppGitRepo\ARapp\app\build\intermediates\transforms\dex\debug\folders\1000\10\instant-run-bootstrap_8fb1e03ea811741f8ce8cdb73b33ef5d4e53e5c3\classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="G:\Praca_Inzynierska\ARAppGitRepo\ARapp\app\build\intermediates\exploded-aar\com.android.support\appcompat-v7\24.0.0\jars\classes.jar"
+        jumboMode="true"
+        optimize="true"
+        revision="24.0.0"
+        sha1="0874286cc2fd88d54fdf130e9d5372730da6de97">
+        <dex dex="G:\Praca_Inzynierska\ARAppGitRepo\ARapp\app\build\intermediates\transforms\dex\debug\folders\1000\10\com.android.support-appcompat-v7-24.0.0_c72a3d124bbdddfb83fe20bb264a1b74e7ef034d\classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="C:\Users\Lesnik\.gradle\caches\modules-2\files-2.1\com.google.protobuf.nano\protobuf-javanano\3.0.0-alpha-7\52587934797e3433992a9d69178a1471e4a8f85d\protobuf-javanano-3.0.0-alpha-7.jar"
+        jumboMode="true"
+        optimize="true"
+        revision="24.0.0"
+        sha1="52587934797e3433992a9d69178a1471e4a8f85d">
+        <dex dex="G:\Praca_Inzynierska\ARAppGitRepo\ARapp\app\build\intermediates\transforms\dex\debug\folders\1000\10\protobuf-javanano-3.0.0-alpha-7_c27a674339d9c469facf02e71ef8bf949890dd88\classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="G:\Praca_Inzynierska\ARAppGitRepo\ARapp\app\build\intermediates\exploded-aar\com.android.support\animated-vector-drawable\24.0.0\jars\classes.jar"
+        jumboMode="true"
+        optimize="true"
+        revision="24.0.0"
+        sha1="e70f608219ed6b974644c333249ab2bb7b71de98">
+        <dex dex="G:\Praca_Inzynierska\ARAppGitRepo\ARapp\app\build\intermediates\transforms\dex\debug\folders\1000\10\com.android.support-animated-vector-drawable-24.0.0_df6ed6a4b8d57084c093e1d959f619b48dec8d4a\classes.dex" />
+    </item>
+    <item
+        is-multidex="true"
+        jar="G:\Praca_Inzynierska\ARAppGitRepo\ARapp\app\build\intermediates\exploded-aar\me.dm7.barcodescanner\core\1.8.4\jars\classes.jar"
+        jumboMode="true"
+        optimize="true"
+        revision="24.0.0"
+        sha1="af8d42f1f020e936b8cd9f5cb6c75993194895a3">
+        <dex dex="G:\Praca_Inzynierska\ARAppGitRepo\ARapp\app\build\intermediates\transforms\dex\debug\folders\1000\10\me.dm7.barcodescanner-core-1.8.4_7cc183ce5761eeef09762baddd6ffd5b517c4ee5\classes.dex" />
+    </item>
+
+</items>
